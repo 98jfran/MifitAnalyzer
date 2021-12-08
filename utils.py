@@ -1,0 +1,265 @@
+import json
+import logging
+import os
+import shutil
+import datetime
+import sys
+import xml.etree.ElementTree as ET
+sys.path.append(os.path.dirname(__file__))
+
+from java.awt import Component
+from java.util import UUID
+from javax.swing import BoxLayout, JCheckBox, JPanel, JRadioButton, JTextArea
+from javax.swing.border import EmptyBorder
+from org.sleuthkit.autopsy.casemodule import Case
+from org.sleuthkit.autopsy.casemodule.services import Blackboard
+from org.sleuthkit.autopsy.coreutils import Version
+from org.sleuthkit.autopsy.geolocation.datamodel import BookmarkWaypoint
+from org.sleuthkit.autopsy.ingest import IngestMessage, IngestServices, ModuleDataEvent
+from org.sleuthkit.datamodel import BlackboardArtifact, BlackboardAttribute, CommunicationsManager
+
+
+class Utils:
+
+    @staticmethod
+    def setup_custom_logger(logfile="module.log"):
+        formatting = '[%(asctime)s] %(levelname)s [%(module)s] - %(message)s'
+
+        # FILE HANDLER
+        logging.basicConfig(level=logging.DEBUG,
+                            format=formatting, filemode='a', filename=logfile)
+
+        # STREAM HANDLER
+        console = logging.StreamHandler()
+        console.setLevel(logging.DEBUG)
+        console.setFormatter(logging.Formatter(formatting))
+        logging.getLogger().addHandler(console)
+
+    @staticmethod
+    def check_and_generate_folder(path):
+        if not os.path.exists(path):
+            return os.makedirs(path)
+
+        return True
+
+    @staticmethod
+    def remove_folder(folder):
+        shutil.rmtree(folder, ignore_errors=True)
+
+    @staticmethod
+    def read_json(path):
+        f = open(path, "r")
+        contents = json.loads(f.read())
+        f.close()
+        return contents
+
+    @staticmethod
+    def verify_header_signature(file, header_type, offset, stream=None):
+        header = b""
+        if stream:
+            header = stream.read(32)
+        else:
+            try:
+                with open(file, "rb") as f:
+                    header = f.read(32)
+            except Exception as e:
+                logging.warning(str(e))
+
+        query = header.find(header_type)  # query includes position of header
+
+        return query == offset
+
+    @staticmethod
+    def minutes_to_time(minutes):
+        return "{:02d}:{:02d}".format((minutes // 60) % 24, minutes % 60)
+
+    @staticmethod
+    def timestamp_to_time(timestamp):
+        return str(datetime.datetime.fromtimestamp(timestamp))
+
+    @staticmethod
+    def xml_attribute_finder(xml_path, attrib_values = None):
+        listing = {}
+        if not os.path.exists(xml_path):
+            return None
+            
+        root = ET.parse(xml_path).getroot()
+        for child in root:
+            if not attrib_values or child.attrib.get("name") in attrib_values:
+                if child.attrib.get("value"):
+                    value= child.attrib.get("value")
+                else:
+                    value = child.text
+
+                try:
+                    listing[child.attrib.get("name")] = str(value)
+                except:
+                    listing[child.attrib.get("name")] = str(value.encode('utf-8','ignore'))
+
+        return listing
+
+
+class BlackBoardUtils:
+
+    @staticmethod
+    def post_message(msg):
+        IngestServices.getInstance().postMessage(
+            IngestMessage.createMessage(IngestMessage.MessageType.DATA, "Mifit", msg))
+
+    @staticmethod
+    def create_attribute_type(att_name, type, att_desc):
+        try:
+            Case.getCurrentCase().getSleuthkitCase(
+            ).addArtifactAttributeType(att_name, type, att_desc)
+        except:
+            pass
+            # logging.warning("Error creating attribute type: " + att_desc)
+        return Case.getCurrentCase().getSleuthkitCase().getAttributeType(att_name)
+
+    @staticmethod
+    def create_artifact_type(base_name, art_name, art_desc):
+        try:
+            Case.getCurrentCase().getSleuthkitCase().addBlackboardArtifactType(
+                art_name, base_name + ": " + art_desc)
+        except:
+            pass
+            # logging.warning("Error creating artifact type: " + art_desc)
+        art = Case.getCurrentCase().getSleuthkitCase().getArtifactType(art_name)
+        return art
+
+    @staticmethod
+    def get_artifacts_list():
+        listing = []
+        try:
+            listing = Case.getCurrentCase().getSleuthkitCase().getArtifactTypesInUse()
+        except:
+            logging.warning("Error getting artifacts list")
+
+        return listing
+
+    @staticmethod
+    def index_artifact(artifact, artifact_type):
+        try:
+            Case.getCurrentCase().getServices().getBlackboard().indexArtifact(artifact)
+        except:
+            logging.warning("Error indexing artifact type: " + artifact_type)
+        IngestServices.getInstance().fireModuleDataEvent(
+            ModuleDataEvent("Mifit", artifact_type, None))
+
+    @staticmethod
+    def add_relationship(node1, node2, art, relationship_type, timestamp):
+        Case.getCurrentCase().getSleuthkitCase().getCommunicationsManager(
+        ).addRelationships(node1, node2, art, relationship_type, timestamp)
+
+    @staticmethod
+    def add_tracking_point(file, timestamp=0, latitude=0, longitude=0, altitude=0, source="source"):
+
+        art = file.newArtifact(
+            BlackboardArtifact.ARTIFACT_TYPE.TSK_GPS_TRACKPOINT)
+        art.addAttribute(BlackboardAttribute(
+            BlackboardAttribute.ATTRIBUTE_TYPE.TSK_GEO_LATITUDE, source, float(latitude)))
+        art.addAttribute(BlackboardAttribute(
+            BlackboardAttribute.ATTRIBUTE_TYPE.TSK_GEO_LONGITUDE, source, float(longitude)))
+        art.addAttribute(BlackboardAttribute(
+            BlackboardAttribute.ATTRIBUTE_TYPE.TSK_GEO_ALTITUDE, source, float(altitude)))
+        art.addAttribute(BlackboardAttribute(
+            BlackboardAttribute.ATTRIBUTE_TYPE.TSK_DATETIME, source, timestamp))
+        BookmarkWaypoint(art)
+        return art
+
+    @staticmethod
+    def get_or_create_account(account_type, file, uniqueid):
+        return Case.getCurrentCase().getSleuthkitCase().getCommunicationsManager().createAccountFileInstance(account_type, uniqueid, "test", file.getDataSource())
+
+    @staticmethod
+    def add_account_type(accountTypeName, displayName):
+        communication_manager = Case.getCurrentCase(
+        ).getSleuthkitCase().getCommunicationsManager()
+        return CommunicationsManager.addAccountType(communication_manager, accountTypeName, displayName)
+
+    @staticmethod
+    def get_autopsy_version():
+        item = {"major": 0, "minor": 0, "patch": 0}
+
+        version = Version.getVersion().split('.')
+
+        try:
+            if len(version) >= 1:
+                item["major"] = int(version[0])
+
+            if len(version) >= 2:
+                item["minor"] = int(version[1])
+
+            if len(version) >= 3:
+                item["patch"] = int(version[2])
+        except:
+            pass
+
+        return item
+
+
+class SettingsUtils:
+
+    @staticmethod
+    def createPanel(scroll=False, ptop=0, pleft=0, pbottom=0, pright=0):
+        panel = JPanel()
+        panel.setLayout(BoxLayout(panel, BoxLayout.PAGE_AXIS))
+        panel.setAlignmentX(Component.LEFT_ALIGNMENT)
+        panel.setBorder(EmptyBorder(ptop, pleft, pbottom, pright))
+        return panel
+
+    @staticmethod
+    def createRadioButton(name, ac, ap):
+        button = JRadioButton(name, actionPerformed=ap)
+        button.setActionCommand(ac)
+        return button
+
+    @staticmethod
+    def createInfoLabel(text):
+        textArea = JTextArea()
+        textArea.setLineWrap(True)
+        textArea.setWrapStyleWord(True)
+        textArea.setOpaque(False)
+        textArea.setEditable(False)
+        textArea.setText(text)
+        return textArea
+
+    @staticmethod
+    def createSeparators(count):
+        lines = ""
+        for i in range(count):
+            lines += "<br>"
+
+        return SettingsUtils.createInfoLabel(lines)
+
+    @staticmethod
+    def createCheckbox(label, ap, visible=False):
+        checkbox = JCheckBox("{}".format(label), actionPerformed=ap)
+        checkbox.setActionCommand(label)
+        checkbox.setSelected(True)
+        checkbox.setVisible(visible)
+        checkbox.setActionCommand(label)
+        return checkbox
+
+
+class MifitUtils:
+
+    @staticmethod
+    def mode_to_activity(mode):
+        activity = {
+            "1": "Slow Walking",
+            "3": "Fast Walking",
+            "4": "Running",
+            "7": "Light Activity",
+        }.get(mode)
+        return activity if activity else str(mode + " - Unknown")
+
+    @staticmethod
+    def mode_to_sleep(mode):
+        sleep = {
+            "4": "Light Sleep",
+            "5": "Deep Sleep",
+            "7": "Time Awake",
+            "8": "REM"
+        }.get(mode)
+        return sleep if sleep else str(mode + " - Unknown")
