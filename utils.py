@@ -7,16 +7,18 @@ import sys
 import xml.etree.ElementTree as ET
 sys.path.append(os.path.dirname(__file__))
 
-from java.awt import Component
-from java.util import UUID
-from javax.swing import BoxLayout, JCheckBox, JPanel, JRadioButton, JTextArea
-from javax.swing.border import EmptyBorder
-from org.sleuthkit.autopsy.casemodule import Case
-from org.sleuthkit.autopsy.casemodule.services import Blackboard
-from org.sleuthkit.autopsy.coreutils import Version
-from org.sleuthkit.autopsy.geolocation.datamodel import BookmarkWaypoint
-from org.sleuthkit.autopsy.ingest import IngestMessage, IngestServices, ModuleDataEvent
-from org.sleuthkit.datamodel import BlackboardArtifact, BlackboardAttribute, CommunicationsManager
+
+if not (sys.executable and "python" in sys.executable.lower()):
+    from java.awt import Component
+    from java.util import UUID
+    from javax.swing import BoxLayout, JCheckBox, JPanel, JRadioButton, JTextArea
+    from javax.swing.border import EmptyBorder
+    from org.sleuthkit.autopsy.casemodule import Case
+    from org.sleuthkit.autopsy.casemodule.services import Blackboard
+    from org.sleuthkit.autopsy.coreutils import Version
+    from org.sleuthkit.autopsy.geolocation.datamodel import BookmarkWaypoint
+    from org.sleuthkit.autopsy.ingest import IngestMessage, IngestServices, ModuleDataEvent
+    from org.sleuthkit.datamodel import BlackboardArtifact, BlackboardAttribute, CommunicationsManager
 
 
 class Utils:
@@ -34,6 +36,36 @@ class Utils:
         console.setLevel(logging.DEBUG)
         console.setFormatter(logging.Formatter(formatting))
         logging.getLogger().addHandler(console)
+    
+    @staticmethod
+    def setup_case():
+        env_path = os.path.join(Utils.get_base_path_folder(), '.env')
+        if not os.path.exists(env_path):
+            return None
+
+        handler = open(env_path, 'r')
+        contents = handler.read()
+        handler.close()
+
+        for line in contents.splitlines():
+            items = line.split('=')
+            if not len(items) > 1:
+                continue
+
+            os.environ[items[0].strip()] = '='.join(items[1:]).strip()
+
+    @staticmethod
+    def list_files(source, pattern = ""):
+        matches = []
+        for root, dirnames, filenames in os.walk(source):
+            for filename in filenames:
+                if pattern in filename:
+                    matches.append(os.path.join(root, filename))
+        return matches
+    
+    @staticmethod
+    def get_base_path_folder():
+        return os.path.dirname((os.path.dirname(__file__)))
 
     @staticmethod
     def check_and_generate_folder(path):
@@ -52,6 +84,12 @@ class Utils:
         contents = json.loads(f.read())
         f.close()
         return contents
+    
+    @staticmethod
+    def write_json(path, contents):
+        f = open(path, "w")
+        f.write(json.dumps(contents, indent=2))
+        f.close()
 
     @staticmethod
     def verify_header_signature(file, header_type, offset, stream=None):
