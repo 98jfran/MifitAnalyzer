@@ -1,3 +1,5 @@
+from distutils.dir_util import mkpath
+from distutils.errors import DistutilsFileError
 import json
 import logging
 import os
@@ -55,11 +57,11 @@ class Utils:
             os.environ[items[0].strip()] = '='.join(items[1:]).strip()
 
     @staticmethod
-    def list_files(source, pattern = ""):
+    def list_files(source, pattern ="", exclude=[]):
         matches = []
         for root, dirnames, filenames in os.walk(source):
             for filename in filenames:
-                if pattern in filename:
+                if (pattern in filename) and not any(ele in filename for ele in exclude):
                     matches.append(os.path.join(root, filename))
         return matches
     
@@ -136,6 +138,80 @@ class Utils:
 
         return listing
 
+    @staticmethod
+    def get_autopsy_version():
+        item = {"major": 0, "minor": 0, "patch": 0}
+
+        version = Version.getVersion().split('.')
+        
+        try:
+            if len(version) >= 1:
+                item["major"] = int(version[0])
+            
+            if len(version) >= 2:
+                item["minor"] = int(version[1])
+
+            if len(version) >= 3:
+                item["patch"] = int(version[2])
+        except:
+            pass
+        
+        return item
+
+    @staticmethod
+    def copy_tree(src, dst, preserve_mode=1, preserve_times=1,
+              preserve_symlinks=0, update=0, verbose=1, dry_run=0):
+        #OVERRIDE FROM DSTUTILS METHOD
+        from distutils.file_util import copy_file
+
+        if not dry_run and not os.path.isdir(src):
+            raise DistutilsFileError(
+                "cannot copy tree '%s': not a directory" % src)
+        try:
+            names = os.listdir(src)
+        except OSError as e:
+            if dry_run:
+                names = []
+            else:
+                raise DistutilsFileError(
+                    "error listing files in '%s': %s" % (src, e.strerror))
+
+        if not dry_run:
+            mkpath(dst, verbose=verbose)
+
+        outputs = []
+
+        for n in names:
+            src_name = os.path.join(src, n)
+            dst_name = os.path.join(dst, n)
+
+            if n.startswith('.nfs'):
+                continue
+
+            if preserve_symlinks and os.path.islink(src_name):
+                link_dest = os.readlink(src_name)
+                if verbose >= 1:
+                    logging.info("linking %s -> %s", dst_name, link_dest)
+                if not dry_run:
+                    os.symlink(link_dest, dst_name)
+                outputs.append(dst_name)
+
+            elif os.path.isdir(src_name):
+                outputs.extend(
+                    Utils.copy_tree(src_name, dst_name, preserve_mode,
+                            preserve_times, preserve_symlinks, update,
+                            verbose=verbose, dry_run=dry_run))
+            else:
+                try:
+                    copy_file(src_name, dst_name, preserve_mode,
+                            preserve_times, update, verbose=verbose,
+                            dry_run=dry_run)
+                    outputs.append(dst_name)
+                except:
+                    pass
+
+        return outputs
+
 
 class BlackBoardUtils:
 
@@ -176,8 +252,9 @@ class BlackBoardUtils:
         return listing
 
     @staticmethod
-    def index_artifact(artifact, artifact_type):
+    def index_artifact(artifact, artifact_type, attributes=[]):
         try:
+            artifact.addAttributes(attributes)
             Case.getCurrentCase().getServices().getBlackboard().indexArtifact(artifact)
         except:
             logging.warning("Error indexing artifact type: " + artifact_type)
@@ -214,26 +291,8 @@ class BlackBoardUtils:
         communication_manager = Case.getCurrentCase(
         ).getSleuthkitCase().getCommunicationsManager()
         return CommunicationsManager.addAccountType(communication_manager, accountTypeName, displayName)
-
-    @staticmethod
-    def get_autopsy_version():
-        item = {"major": 0, "minor": 0, "patch": 0}
-
-        version = Version.getVersion().split('.')
-
-        try:
-            if len(version) >= 1:
-                item["major"] = int(version[0])
-
-            if len(version) >= 2:
-                item["minor"] = int(version[1])
-
-            if len(version) >= 3:
-                item["patch"] = int(version[2])
-        except:
-            pass
-
-        return item
+    
+   
 
 
 class SettingsUtils:
@@ -301,3 +360,22 @@ class MifitUtils:
             "8": "REM"
         }.get(mode)
         return sleep if sleep else str(mode + " - Unknown")
+    
+    @staticmethod    
+    def getCoordianateByString(raw):
+        return {"lat": int(raw.split(",")[0]), "lon": int(raw.split(",")[1])}
+
+    @staticmethod
+    def getCoordinateByBulkArray(bulk):
+        previous = MifitUtils.getCoordianateByString(bulk[0])
+
+        clean_coordinates = []
+        print("previous: {}".format(previous))
+
+        for coordinate in bulk[1:]:
+            current = {"lat": (previous.get("lat") + (MifitUtils.getCoordianateByString(coordinate).get("lat"))), "lon": (previous.get("lon") + (MifitUtils.getCoordianateByString(coordinate).get("lon")))}
+            clean_coordinates.append("{} {}".format(current.get("lat")* 0.00000001 ,current.get("lon") * 0.00000001))
+            previous = current
+        return clean_coordinates
+
+    

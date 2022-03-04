@@ -15,8 +15,7 @@ from collections import OrderedDict
 sys.path.append(os.path.dirname(__file__))
 
 
-from utils import Utils, SettingsUtils, MifitUtils
-import logging
+from utils import SettingsUtils
 
 class MifitIngestSettingsPanel(IngestModuleIngestJobSettingsPanel):
     def __init__(self, settings):
@@ -65,3 +64,6 @@ class MifitIngestSettingsPanel(IngestModuleIngestJobSettingsPanel):
 
     
 
+class MifitReportSettingsPanel(JPanel):
+    def __init__(self):
+        pass

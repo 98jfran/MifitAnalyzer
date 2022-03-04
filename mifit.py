@@ -1,17 +1,19 @@
-import os
-import sys
-import logging
 
 from org.sleuthkit.autopsy.ingest import GenericIngestModuleJobSettings
 from org.sleuthkit.autopsy.report import GeneralReportModuleAdapter
 from org.sleuthkit.autopsy.ingest import IngestModuleFactoryAdapter
-from org.sleuthkit.autopsy.corecomponentinterfaces import DataSourceProcessor  
+from org.sleuthkit.autopsy.report.ReportProgressPanel import ReportStatus
 from org.sleuthkit.autopsy.casemodule import Case
 
-from ingest import MifitIngestModule
-from settings import MifitIngestSettingsPanel
 
-from utils import Utils, SettingsUtils, MifitUtils, BlackBoardUtils
+import sys, os
+from standalone import Standalone
+
+from utils import Utils
+
+sys.path.append(os.path.dirname(__file__))
+from ingest import MifitIngestModule
+from settings import MifitIngestSettingsPanel, MifitReportSettingsPanel
 
 class MifitIngestModuleFactory(IngestModuleFactoryAdapter):
     moduleName = "Mifit Android App Analyzer"
@@ -51,4 +53,58 @@ class MifitIngestModuleFactory(IngestModuleFactoryAdapter):
         return MifitIngestSettingsPanel(self.settings)
 
 
+class MifitIngestModuleReport(GeneralReportModuleAdapter):
+    moduleName = "Mifit Android App Report"
 
+    def __init__(self):
+        self.settings = None
+        # self.report = MifitReport()
+
+    def getName(self):
+        return self.moduleName
+
+    def getDescription(self):
+        return "Forensic Analysis for Mobile Apps Framework Report Generator"
+
+    def generateReport(self, settings, progressBar):
+
+        progressBar.setIndeterminate(True)
+
+        self.fileManager = Case.getCurrentCase().getServices().getFileManager()
+
+        progressBar.updateStatusLabel("Searching for processed Mifit data...")
+
+        self.reportFile = os.path.join(Case.getCurrentCase().getModulesOutputDirAbsPath(), "Mifit", "report.json")
+
+        progressBar.updateStatusLabel("Creating report")
+        
+        os.environ["CASE_NAME"] = Case.getCurrentCase().getName()
+        os.environ["CASE_NUMBER"] = Case.getCurrentCase().getNumber()
+        os.environ["EXAMINER"] = Case.getCurrentCase().getExaminer()
+
+        autopsy_version = Utils.get_autopsy_version()
+
+        baseReportDir = settings
+        
+        if (autopsy_version["major"] == 4 and autopsy_version["minor"] >= 16):
+            baseReportDir = settings.getReportDirectoryPath()
+        
+        report_path = os.path.join(Case.getCurrentCase().getModulesOutputDirAbsPath(), "Mifit")
+
+        Utils.check_and_generate_folder(report_path)
+
+        Utils.copy_tree(os.path.join(os.path.dirname(__file__), "report"), report_path)
+
+        report = Utils.read_json(self.reportFile)
+        report_html_path = Standalone.detach_report(report, os.path.join(report_path, "js", "report.js"))
+
+        Case.getCurrentCase().addReport(report_html_path, "Report", "Forensics Report")
+        progressBar.updateStatusLabel("Done")
+        progressBar.complete(ReportStatus.COMPLETE)
+
+    def getConfigurationPanel(self):
+        self.configPanel = MifitReportSettingsPanel()
+        return self.configPanel
+
+    def getRelativeFilePath(self):
+        return "../../ModuleOutput/Mifit/index.html"

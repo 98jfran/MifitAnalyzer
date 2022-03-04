@@ -4,6 +4,7 @@ import os
 import sys
 
 from package.database import Database
+from standalone import Standalone
 from utils import BlackBoardUtils, MifitUtils, Utils
 from org.sleuthkit.autopsy.casemodule import Case
 from org.sleuthkit.autopsy.ingest import DataSourceIngestModule, IngestModule
@@ -60,6 +61,12 @@ class MifitIngestModule(DataSourceIngestModule):
 
         # Filemanager for this case
         self.fileManager = Case.getCurrentCase().getServices().getFileManager()
+    
+    def get_info(self, attr=""):
+        try:
+            return self.report.get("report").get(attr)
+        except Exception as e:
+            logging.warning(str(e))
 
     def startUp(self, context):
         # Set the environment context
@@ -70,237 +77,125 @@ class MifitIngestModule(DataSourceIngestModule):
         self.progressBar = progressBar
         progressBar.switchToDeterminate(100)
 
-        # Files
-        self.db_origin = self.fileManager.findFiles(dataSource, "%origin_db_%")
-        self.db_stress = self.fileManager.findFiles(dataSource, "%stress__%.db")
-        self.xml_sdk = self.fileManager.findFiles(dataSource, "hm_id_sdk_android.xml")
+        self.temp_module_path = os.path.join(Case.getCurrentCase().getModulesOutputDirAbsPath(), "Mifit")
+        Utils.check_and_generate_folder(self.temp_module_path)
+
+        file = self.fileManager.findFiles(dataSource, "%origin%")[0]
+        standalone = Standalone(os.path.dirname(os.path.dirname(file.getLocalPath())), "report.json")
+
+        self.report = standalone.analyse()
+        file_handler = open(os.path.join(self.temp_module_path, "report.json"), "w")
+        file_handler.write(json.dumps(self.report))
+        file_handler.close()
+        logging.info("Json report generated at: {}".format(self.temp_module_path))
+
+
+
+        for entry in self.get_info("origin").get("hr"):
+            try:
+                artifact = file.newArtifact(self.artifacts.get('heartRate').getTypeID())
+                attributes = [
+                    BlackboardAttribute(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_DATETIME, file.getLocalPath(), entry.get("time")/1000),
+                    BlackboardAttribute(self.attributes.get('heartRate'), file.getLocalPath(), entry.get("value")),
+                    BlackboardAttribute(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_DEVICE_ID, file.getLocalPath(), entry.get("device"))
+                ]
+                BlackBoardUtils.index_artifact(artifact, self.artifacts.get('heartRate'), attributes)
+            except Exception as e:
+                logging.warning(str(e))
         
-
-
-        for file in self.db_origin:
-            with open(file.getLocalPath(), 'rb') as f:
-                self.analyze_origin(file)
-                f.close()
-
-        for file in self.xml_sdk:
-            with open(file.getLocalPath(), 'rb') as f:
-                self.analyze_sdk(file)
-                f.close()
-
-        for file in self.db_stress:
-            with open(file.getLocalPath(), 'rb') as f:
-                self.analyze_stress(file)
-                f.close()
-
-        # Handle analysis
-
-    def analyze_origin(self, file):
-        # self.art_heartRate = BlackBoardUtils.create_artifact_type("MIFIT", "MIFIT_HR", "Heart Rate")
-        # self.att_hr = BlackBoardUtils.create_attribute_type('MIFIT_HR', BlackboardAttribute.TSK_BLACKBOARD_ATTRIBUTE_VALUE_TYPE.STRING, "Heart Rate")
-
-        try:
-            database = Database(file.getLocalPath())
-# Heart Rate
-            results = database.execute_query(
-                "select TIME, HR, DEVICE_ID from HEART_RATE")
-            for entry in results:
-                try:
-                    artifact = file.newArtifact(
-                        self.artifacts.get('heartRate').getTypeID())
-
-                    attributes = []
-                    attributes.append(BlackboardAttribute(
-                        BlackboardAttribute.ATTRIBUTE_TYPE.TSK_DATETIME, file.getLocalPath(), entry[0]))
-                    attributes.append(BlackboardAttribute(self.attributes.get(
-                        'heartRate'), file.getLocalPath(), str(entry[1])))
-                    attributes.append(BlackboardAttribute(
-                        BlackboardAttribute.ATTRIBUTE_TYPE.TSK_DEVICE_ID, file.getLocalPath(), str(entry[2])))
-                    artifact.addAttributes(attributes)
-                    BlackBoardUtils.index_artifact(
-                        artifact, self.artifacts.get('heartRate'))                
-                except:
+        for entry in self.get_info("origin").get("sleep"):
+            try:
+                artifact = file.newArtifact(self.artifacts.get('sleep').getTypeID())
+                attributes = [
+                    BlackboardAttribute(self.attributes.get('datestr'), file.getLocalPath(), entry.get("date")),
+                    BlackboardAttribute(self.attributes.get('from'), file.getLocalPath(), entry.get("from")),
+                    BlackboardAttribute(self.attributes.get('to'), file.getLocalPath(), entry.get("to")),
+                    BlackboardAttribute(self.attributes.get('mode'), file.getLocalPath(), entry.get("mode"))
+                    ]
+                
+                BlackBoardUtils.index_artifact(artifact, self.artifacts.get('sleep'), attributes)
+            except:
                     pass
 
-# Alarms
-            logging.info("Parsing Alarm Data")
-
-            results = database.execute_query(
-                "select CALENDAR, ENABLED from ALARM")
-
-            for entry in results:
-                try:
-                    artifact = file.newArtifact(
-                    self.artifacts.get('alarm').getTypeID())
-
-                    attributes = []
-                    attributes.append(BlackboardAttribute(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_DATETIME, file.getLocalPath(), int(entry[0])/1000))
-                    attributes.append(BlackboardAttribute(self.attributes.get('enabled'), file.getLocalPath(), str(entry[1])))
-                    artifact.addAttributes(attributes)
-                    BlackBoardUtils.index_artifact(artifact, self.artifacts.get('alarm'))
-                except:
+        for entry in self.get_info("origin").get("alarm"):
+            try:
+                artifact = file.newArtifact(self.artifacts.get('alarm').getTypeID())
+                attributes = [
+                    BlackboardAttribute(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_DATETIME, file.getLocalPath(), entry.get("time")/1000),
+                    BlackboardAttribute(self.attributes.get('enabled'), file.getLocalPath(), entry.get("enabled"))
+                ]
+                BlackBoardUtils.index_artifact(artifact, self.artifacts.get('alarm'), attributes)
+            except:
+                pass
+        
+        for entry in self.get_info("origin").get("steps"):
+            try:
+                artifact = file.newArtifact(self.artifacts.get('steps').getTypeID())
+                attributes = [
+                    BlackboardAttribute(self.attributes.get('datestr'), file.getLocalPath(), entry.get("date")),
+                    BlackboardAttribute(self.attributes.get('from'), file.getLocalPath(), entry.get("from")),
+                    BlackboardAttribute(self.attributes.get('to'), file.getLocalPath(), entry.get("to")),
+                    BlackboardAttribute(self.attributes.get('mode'), file.getLocalPath(), entry.get("mode")),
+                    BlackboardAttribute(self.attributes.get('distance'), file.getLocalPath(), entry.get("distance")),
+                    BlackboardAttribute(self.attributes.get('calories'), file.getLocalPath(), entry.get("calories")),
+                    BlackboardAttribute(self.attributes.get('steps'), file.getLocalPath(), entry.get("steps"))
+                    ]
+                
+                BlackBoardUtils.index_artifact(artifact, self.artifacts.get('sleep'), attributes)
+            except:
                     pass
-
-
-# Summary data
-            logging.info("Parsing Activities Data")
-            results = database.execute_query(
-                "select SOURCE, DATE, SUMMARY, DATA from DATE_DATA")
-
-            for entry in results:
-                try:
-                    summary = json.loads(entry[2])
-                    
-                    # steps data
-                    if summary.get("stp") and summary.get("stp").get("stage"):
-                        for step_record in summary.get("stp").get("stage"):
-                            artifact = file.newArtifact(
-                                self.artifacts.get('steps').getTypeID())
-                            attributes = []
-                            attributes.append(BlackboardAttribute(self.attributes.get(
-                                'datestr'), file.getLocalPath(), str(entry[1])))
-                            attributes.append(BlackboardAttribute(self.attributes.get(
-                                'from'), file.getLocalPath(), Utils.minutes_to_time(step_record.get("start"))))
-                            attributes.append(BlackboardAttribute(self.attributes.get(
-                                'to'), file.getLocalPath(), Utils.minutes_to_time(step_record.get("stop"))))
-                            attributes.append(BlackboardAttribute(self.attributes.get('mode'), file.getLocalPath(
-                            ), MifitUtils.mode_to_activity(str(step_record.get("mode")))))
-                            attributes.append(BlackboardAttribute(self.attributes.get(
-                                'distance'), file.getLocalPath(), str(step_record.get("dis"))))
-                            attributes.append(BlackboardAttribute(self.attributes.get(
-                                'calories'), file.getLocalPath(), str(step_record.get("cal"))))
-                            attributes.append(BlackboardAttribute(self.attributes.get(
-                                'steps'), file.getLocalPath(), str(step_record.get("step"))))
-                            artifact.addAttributes(attributes)
-                            BlackBoardUtils.index_artifact(
-                                artifact, self.artifacts.get('steps'))
-                except:
-                    pass
-                # sleep data
-
-                if summary.get("slp") and summary.get("slp").get("stage"):
-
+        
+        for entry in self.get_info("origin").get("workouts"):
+            try:
+                artifact = file.newArtifact(self.artifacts.get('steps').getTypeID())
+                attributes = [
+                    BlackboardAttribute(self.attributes.get('mode'), file.getLocalPath(), entry.get("type")),
+                    BlackboardAttribute(self.attributes.get('start'), file.getLocalPath(), entry.get("start")),
+                    BlackboardAttribute(self.attributes.get('stop'), file.getLocalPath(), entry.get("end")),
+                    BlackboardAttribute(self.attributes.get('distance'), file.getLocalPath(), entry.get("distance")),
+                    BlackboardAttribute(self.attributes.get('calories'), file.getLocalPath(), entry.get("calories")),
+                    BlackboardAttribute(self.attributes.get('steps'), file.getLocalPath(), entry.get("steps"))
+                    ]
+                
+                BlackBoardUtils.index_artifact(artifact, self.artifacts.get('sleep'), attributes)
+                for coordinate in entry.get("coordinates"):
                     try:
-                        for sleep_record in summary.get("slp").get("stage"):
-                            artifact = file.newArtifact(
-                                self.artifacts.get('sleep').getTypeID())
-
-                            attributes = []
-                            attributes.append(BlackboardAttribute(self.attributes.get(
-                                'datestr'), file.getLocalPath(), str(entry[1])))
-                            attributes.append(BlackboardAttribute(self.attributes.get(
-                                'from'), file.getLocalPath(), Utils.minutes_to_time(sleep_record.get("start"))))
-                            attributes.append(BlackboardAttribute(self.attributes.get(
-                                'to'), file.getLocalPath(), Utils.minutes_to_time(sleep_record.get("stop"))))
-                            attributes.append(BlackboardAttribute(self.attributes.get(
-                                'mode'), file.getLocalPath(), MifitUtils.mode_to_sleep(str(sleep_record.get("mode")))))
-
-                            artifact.addAttributes(attributes), BlackBoardUtils.index_artifact(artifact, self.artifacts.get('sleep'))
+                        BlackBoardUtils.add_tracking_point(file, entry.get("start"), coordinate.split(" ")[0], coordinate.split(" ")[1], source=file.getLocalPath())
                     except:
                         pass
-                # Workouts
+            except:
 
-            results = database.execute_query(
-                "select TYPE, DATE, TRACKID, DISTANCE, COSTTIME, CAL, PACE, SFREQ, AVGHR, TOTAL_STEP, ENDTIME from TRACKRECORD")
-
-            for entry in results:
-
-                try:
-                    artifact = file.newArtifact(
-                        self.artifacts.get('workout').getTypeID())
-                    attributes = []
-                    attributes.append(BlackboardAttribute(self.attributes.get(
-                        'type'), file.getLocalPath(), str(entry[0])))
-                    attributes.append(BlackboardAttribute(self.attributes.get(
-                        'startTime'), file.getLocalPath(), int(entry[2])))
-                    attributes.append(BlackboardAttribute(self.attributes.get(
-                        'endTime'), file.getLocalPath(), int(entry[10])))
-                    attributes.append(BlackboardAttribute(self.attributes.get(
-                        'distance'), file.getLocalPath(), str(entry[3])))
-                    attributes.append(BlackboardAttribute(self.attributes.get(
-                        'calories'), file.getLocalPath(), str(entry[5])))
-                    attributes.append(BlackboardAttribute(self.attributes.get(
-                        'steps'), file.getLocalPath(), str(entry[9])))
-                    artifact.addAttributes(attributes)
-                    BlackBoardUtils.index_artifact(
-                        artifact, self.artifacts.get('workout'))
-                except:
+                pass
+        
+        for entry in self.get_info("stress").get("allDayStress"):
+            try:
+                artifact = file.newArtifact(self.artifacts.get('stress').getTypeID())
+                attributes = [
+                    BlackboardAttribute(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_DATETIME, file.getLocalPath(), entry.get("time")/1000),
+                    BlackboardAttribute(self.attributes.get('stress'), file.getLocalPath(), entry.get("value")),
+                    BlackboardAttribute(self.attributes.get('steps'), file.getLocalPath(), entry.get("steps"))
+                ]
+                BlackBoardUtils.index_artifact(artifact, self.artifacts.get('stress'), attributes)
+            except:
                     pass
 
-        except Exception as e:
-            logging.warning("Error parsing Origin Database: " + str(e))
-
-
-    def analyze_stress(self, file):
-        
-        logging.info("Parsing Stress Data")
-        
-        try:
-            database = Database(file.getLocalPath())
-    # stress
-            results = database.execute_query(
-                "select data from AllDayStress;")
-
-            for entry in results:
-                try:
-                    records = json.loads(entry[0])
-                    
-                    # steps data
-                    if records:
-                        for stress_record in records:
-                            artifact = file.newArtifact(
-                                self.artifacts.get('stress').getTypeID())
-                            attributes = []
-                            attributes.append(BlackboardAttribute(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_DATETIME, file.getLocalPath(), int(stress_record.get("time"))/1000))
-                            attributes.append(BlackboardAttribute(self.attributes.get(
-                                'stress'), file.getLocalPath(), str(stress_record.get("value"))))
-                            artifact.addAttributes(attributes)
-                            BlackBoardUtils.index_artifact(
-                                artifact, self.artifacts.get('stress'))
-                except:
+        for entry in self.get_info("users").get("userInfo"):
+            try:
+                artifact = file.newArtifact(self.artifacts.get('userInfo').getTypeID())
+                attributes = [
+                    BlackboardAttribute(self.attributes.get('provider'), file.getLocalPath(), entry.get("provider")),
+                    BlackboardAttribute(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_COUNTRY, file.getLocalPath(), entry.get("provider")),
+                    BlackboardAttribute(self.attributes.get('registDate'), file.getLocalPath(), entry.get("registDate")/1000),
+                    BlackboardAttribute(self.attributes.get('appToken'), file.getLocalPath(), entry.get("appToken")),
+                    BlackboardAttribute(self.attributes.get('loginToken'), file.getLocalPath(), entry.get("loginToken")),
+                    BlackboardAttribute(self.attributes.get('idToken'), file.getLocalPath(), entry.get("idToken")),
+                    BlackboardAttribute(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_EMAIL, file.getLocalPath(), entry.get("email")),
+                    BlackboardAttribute(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_NAME_PERSON, file.getLocalPath(), entry.get("nickname")),
+                    BlackboardAttribute(self.attributes.get('thirdId'), file.getLocalPath(), entry.get("thirdId"))
+                ]
+                BlackBoardUtils.index_artifact(artifact, self.artifacts.get('userInfo'), attributes)
+            except:
                     pass
-
-        except Exception as e:
-            logging.warning("Error parsing Stress Database: " + str(e))
-
-
-    def analyze_sdk(self, file):
-        
-        logging.info("Parsing User Info from SDK File")
-        
-        try:
-            xml_file = file.getLocalPath()
-
-            values = Utils.xml_attribute_finder(xml_file)
-
-            for key, value in values.items():
-                try:
-                    if key == "ti":
-                        dump = json.loads(value.encode('utf-8'))
-                        logging.warning(dump)
-
-                        artifact = file.newArtifact(self.artifacts.get('userInfo').getTypeID())
-                        attributes = []
-
-                        attributes.append(BlackboardAttribute(self.attributes.get('provider'), file.getLocalPath(), str(dump.get("provider"))))
-                        attributes.append(BlackboardAttribute(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_COUNTRY, file.getLocalPath(), str(dump.get("regist_info").get("country_code").encode('utf-8'))))
-                        attributes.append(BlackboardAttribute(self.attributes.get('registDate'), file.getLocalPath(), int(dump.get("regist_info").get("regist_date"))/1000))
-                        attributes.append(BlackboardAttribute(self.attributes.get('appToken'), file.getLocalPath(), str(dump.get("token_info").get("app_token").encode('utf-8'))))
-                        attributes.append(BlackboardAttribute(self.attributes.get('loginToken'), file.getLocalPath(), str(dump.get("token_info").get("login_token").encode('utf-8'))))
-                        attributes.append(BlackboardAttribute(self.attributes.get('idToken'), file.getLocalPath(), str(dump.get("token_info").get("user_id").encode('utf-8'))))
-                        attributes.append(BlackboardAttribute(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_EMAIL, file.getLocalPath(), str(dump.get("thirdparty_info").get("email").encode('utf-8'))))
-                        attributes.append(BlackboardAttribute(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_NAME_PERSON, file.getLocalPath(), str(dump.get("thirdparty_info").get("nickname").encode('utf-8'))))
-                        attributes.append(BlackboardAttribute(self.attributes.get('thirdId'), file.getLocalPath(), str(dump.get("thirdparty_info").get("third_id").encode('utf-8'))))
-                        
-                        artifact.addAttributes(attributes)
-                        
-                        BlackBoardUtils.index_artifact(artifact, self.artifacts.get('userInfo'))
-                
-                except Exception as e:
-                    logging.warning("Error parsing SDK shared preferences XML File: " + str(e))
-        
-        except Exception as e:
-            logging.warning("Error parsing SDK shared preferences XML File: " + str(e))
-
 
 class ProgressJob:
     def __init__(self, progressBar, jobs, maxValue=100):
