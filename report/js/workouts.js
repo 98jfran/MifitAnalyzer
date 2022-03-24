@@ -1,11 +1,24 @@
+
+function showPinOnMap(event){
+    L.marker([Number(event.id.split(' ')[0]), Number(event.id.split(' ')[1])]).addTo(map);
+    event.disabled = true
+    event.innerHTML = "Added"
+    event.classList.remove("btn-success");
+    event.classList.add("btn-primary");
+}
+    
+var map;
 window.addEventListener('DOMContentLoaded', event => {
     var workouts = reportRAW['report']['origin']['workouts'];
 
     let workoutsHTML='';
     let coordinatesHTML='';
     // var map = L.map('map');
-    var map = L.map('map').setView([51.505, -0.09], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {}).addTo(map);
+    map = L.map('map').setView([51.505, -0.09], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    }).addTo(map);
+
 
     var latlngs = [];
     var markers = [];
@@ -39,19 +52,20 @@ window.addEventListener('DOMContentLoaded', event => {
             <tr>
                 <td>${coordinate.split(' ')[0]}</td>
                 <td>${coordinate.split(' ')[1]}</td>
+                <td><button type="button" class="btn btn-success" id="${coordinate.split(' ')[0]} ${coordinate.split(' ')[1]}" onclick=showPinOnMap(this)> <i class="fa fa-plus"></i> Add to map</button></td>
             </tr>
             `
-              });
+            });
             item.coordinates.forEach((coordinate) => {
                 latlngs.push([Number(coordinate.split(' ')[0]), Number(coordinate.split(' ')[1])]);
             });
-
+            
             
 
 
         }
     });
-     
+
 
     var polyline = L.polyline(latlngs, {color: 'red'}).addTo(map);        
     L.marker(latlngs[0]).addTo(map);

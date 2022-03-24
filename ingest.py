@@ -4,6 +4,7 @@ import os
 import sys
 
 from package.database import Database
+from gps import Kml
 from standalone import Standalone
 from utils import BlackBoardUtils, MifitUtils, Utils
 from org.sleuthkit.autopsy.casemodule import Case
@@ -77,17 +78,25 @@ class MifitIngestModule(DataSourceIngestModule):
         self.progressBar = progressBar
         progressBar.switchToDeterminate(100)
 
+        self.start_date = self.settings.getSetting('startDate')
+        self.end_date = self.settings.getSetting('endDate')
+        self.options = json.loads(self.settings.getSetting('options'))
+        self.is_gps = "Index GPS Coordinates" in self.options
+
+        logging.info("Start Date {}".format(self.settings.getSetting('startDate')))
+        logging.info("End Date {}".format(self.settings.getSetting('endDate')))
+        logging.info("Options {}".format(self.settings.getSetting('options')))
+
         self.temp_module_path = os.path.join(Case.getCurrentCase().getModulesOutputDirAbsPath(), "Mifit")
         Utils.check_and_generate_folder(self.temp_module_path)
 
         file = self.fileManager.findFiles(dataSource, "%origin%")[0]
-        standalone = Standalone(os.path.dirname(os.path.dirname(file.getLocalPath())), "report.json")
+        standalone = Standalone(os.path.dirname(os.path.dirname(file.getLocalPath())), "report.json", self.start_date, self.end_date, True)
 
         self.report = standalone.analyse()
         file_handler = open(os.path.join(self.temp_module_path, "report.json"), "w")
         file_handler.write(json.dumps(self.report))
         file_handler.close()
-        logging.info("Json report generated at: {}".format(self.temp_module_path))
 
 
 
@@ -157,14 +166,14 @@ class MifitIngestModule(DataSourceIngestModule):
                     BlackboardAttribute(self.attributes.get('steps'), file.getLocalPath(), entry.get("steps"))
                     ]
                 
-                BlackBoardUtils.index_artifact(artifact, self.artifacts.get('sleep'), attributes)
-                for coordinate in entry.get("coordinates"):
-                    try:
-                        BlackBoardUtils.add_tracking_point(file, entry.get("start"), coordinate.split(" ")[0], coordinate.split(" ")[1], source=file.getLocalPath())
-                    except:
-                        pass
+                BlackBoardUtils.index_artifact(artifact, self.artifacts.get('steps'), attributes)
+                if self.is_gps:
+                    for coordinate in entry.get("coordinates"):
+                        try:
+                            BlackBoardUtils.add_tracking_point(file, entry.get("start"), coordinate.split(" ")[0], coordinate.split(" ")[1], source=file.getLocalPath())
+                        except:
+                            pass
             except:
-
                 pass
         
         for entry in self.get_info("stress").get("allDayStress"):

@@ -3,13 +3,21 @@ import logging
 import json
 
 from package.database import Database
+from gps import Kml
 from utils import MifitUtils, Utils
 
+
 class Standalone:
-    def __init__(self, dump_path="", report_path="report.json"):
+    def __init__(self, dump_path="", report_path="report.json", start_date=None, end_date=None, gps=None):
         self.dump_path = dump_path
         self.report_path = report_path
+        self.start_date = Utils.date_to_timestamp(start_date, "%Y-%m-%d", 0)
+        self.end_date = Utils.date_to_timestamp(end_date, "%Y-%m-%d", Utils.get_current_timestamp())
+        self.gps = gps
+        logging.info("Start date: {}".format( self.start_date))
+        logging.info("End date: {}".format( self.end_date))
         self.report_struct = {}
+        self.kml_struct = Kml()
 
     def analyse(self):
         self.report_struct = {"case":{}, "report":{}}
@@ -22,9 +30,6 @@ class Standalone:
         origin_dbs = Utils.list_files(self.dump_path, "origin_db", ["journal","wal", "-shm"])
         stress_dbs = Utils.list_files(self.dump_path, "stress_", ["journal","wal", "shm"])
         sdk_xmls = Utils.list_files(self.dump_path, "hm_id_sdk_android")
-
-        print(origin_dbs)
-
 
         for db in origin_dbs:
             try:
@@ -59,6 +64,10 @@ class Standalone:
         file_handler = open(os.path.join("./report/js", "report.js"), "w")
         file_handler.write(js_report)
         file_handler.close()
+
+        if self.gps:
+            self.kml_struct.write("map.kml")
+            
         logging.info("Full HTML report: {}".format(os.path.abspath(os.path.join("./report/index.html"))))
         
     
@@ -87,6 +96,9 @@ class Standalone:
             for entry in results:
                 hr_record = {}
                 try:
+                    if(not Utils.is_timestamp_between_timestamps(int(entry[0]), self.start_date, self.end_date)):
+                        continue
+                    
                     hr_record["time"] = int(entry[0])
                     hr_record["value"] = str(entry[1])
                     hr_record["device"] = str(entry[2])
@@ -117,6 +129,9 @@ class Standalone:
                     summary = json.loads(entry[2])
                     for summary_record in summary.get("stp").get("stage"):
                         try:
+                            # logging.warning(Utils.date_to_timestamp(str(entry[1]), "%Y-%m-%d"))
+                            if(not Utils.is_timestamp_between_timestamps(Utils.date_to_timestamp(str(entry[1]), "%Y-%m-%d"), self.start_date, self.end_date)):
+                                continue
                             step_record = {}
                             step_record["date"] = str(entry[1])
                             step_record["from"] = Utils.minutes_to_time(summary_record.get("start"))
@@ -135,6 +150,8 @@ class Standalone:
                 if summary.get("slp") and summary.get("slp").get("stage"):
                     for summary_record in summary.get("slp").get("stage"):
                         try:
+                            if(not Utils.is_timestamp_between_timestamps(Utils.date_to_timestamp(str(entry[1]), "%Y-%m-%d"), self.start_date, self.end_date)):
+                                continue
                             sleep_record = {}
                             sleep_record["date"] = str(entry[1])
                             sleep_record["from"] = Utils.minutes_to_time(summary_record.get("start"))
@@ -165,6 +182,11 @@ class Standalone:
                     coordinatesRAW = str(entry[11]).split(";")
                     activity_record["coordinates"] = MifitUtils.getCoordinateByBulkArray(coordinatesRAW)
                     activity_records.append(activity_record)
+
+                    if self.gps:
+                        for c in activity_record["coordinates"]:
+                            self.kml_struct.add_placemark('Location1','Description1',c.split(" ")[0],c.split(" ")[1],0)
+
                 except Exception as e:
                     logging.warning(e)
         
@@ -189,8 +211,10 @@ class Standalone:
                     records = json.loads(entry[0])
                     if records:
                         for record in records:
+                            if(not Utils.is_timestamp_between_timestamps((int(record.get("time"))/1000), self.start_date, self.end_date)):
+                                continue
                             stress_record = {}
-                            stress_record["time"] = int(record.get("time"))
+                            stress_record["time"] = int(record.get("time"))/1000
                             stress_record["value"] = str(record.get("value"))
                             stress_records.append(stress_record)
                 except:

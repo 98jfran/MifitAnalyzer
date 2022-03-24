@@ -6,6 +6,7 @@ import os
 import shutil
 import datetime
 import sys
+import time
 import xml.etree.ElementTree as ET
 sys.path.append(os.path.dirname(__file__))
 
@@ -13,7 +14,7 @@ sys.path.append(os.path.dirname(__file__))
 if not (sys.executable and "python" in sys.executable.lower()):
     from java.awt import Component
     from java.util import UUID
-    from javax.swing import BoxLayout, JCheckBox, JPanel, JRadioButton, JTextArea
+    from javax.swing import BoxLayout, JCheckBox, JPanel, JRadioButton, JTextArea, JTextField
     from javax.swing.border import EmptyBorder
     from org.sleuthkit.autopsy.casemodule import Case
     from org.sleuthkit.autopsy.casemodule.services import Blackboard
@@ -118,6 +119,39 @@ class Utils:
         return str(datetime.datetime.fromtimestamp(timestamp))
 
     @staticmethod
+    def date_to_timestamp(date, date_format, default=None):
+        try:
+            timestamp = int(time.mktime(datetime.datetime.strptime(date, date_format).timetuple()))
+            return timestamp
+        except Exception as e:
+            logging.error(e)
+            logging.warning("Invalid date {} ({}) to be convert to timestamp. Using {} by default.".format(date, date_format, default))
+            return default
+    
+    @staticmethod
+    def is_timestamp_between_timestamps(timestamp, lower_limit=0, upper_limit=9999999999):
+        if not timestamp:
+            return True
+        else:
+            return int(lower_limit) <= int(timestamp) <= int(upper_limit)
+    
+    @staticmethod
+    def get_current_timestamp():
+        return int(time.time())
+
+    @staticmethod
+    def get_current_date(date_format):
+        return datetime.datetime.today().strftime(date_format)
+
+    @staticmethod
+    def is_valid_date(date, date_format="%Y/%m/%d"):
+        try:
+            datetime.datetime.strptime(date, date_format)
+            return True
+        except Exception:
+            return False
+    
+    @staticmethod
     def xml_attribute_finder(xml_path, attrib_values = None):
         listing = {}
         if not os.path.exists(xml_path):
@@ -159,8 +193,7 @@ class Utils:
         return item
 
     @staticmethod
-    def copy_tree(src, dst, preserve_mode=1, preserve_times=1,
-              preserve_symlinks=0, update=0, verbose=1, dry_run=0):
+    def copy_tree(src, dst, preserve_mode=1, preserve_times=1, preserve_symlinks=0, update=0, verbose=1, dry_run=0):
         #OVERRIDE FROM DSTUTILS METHOD
         from distutils.file_util import copy_file
 
@@ -337,6 +370,12 @@ class SettingsUtils:
         checkbox.setVisible(visible)
         checkbox.setActionCommand(label)
         return checkbox
+    
+    @staticmethod
+    def createInputField(ap, enabled=True):
+        textField = JTextField(10, focusLost=ap)
+        textField.setEnabled(enabled)
+        return textField
 
 
 class MifitUtils:
@@ -370,7 +409,6 @@ class MifitUtils:
         previous = MifitUtils.getCoordianateByString(bulk[0])
 
         clean_coordinates = []
-        print("previous: {}".format(previous))
 
         for coordinate in bulk[1:]:
             current = {"lat": (previous.get("lat") + (MifitUtils.getCoordianateByString(coordinate).get("lat"))), "lon": (previous.get("lon") + (MifitUtils.getCoordianateByString(coordinate).get("lon")))}

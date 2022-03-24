@@ -12,6 +12,7 @@ from standalone import Standalone
 from utils import Utils
 
 sys.path.append(os.path.dirname(__file__))
+from gps import Kml
 from ingest import MifitIngestModule
 from settings import MifitIngestSettingsPanel, MifitReportSettingsPanel
 
