@@ -65,7 +65,7 @@ class MifitIngestModuleReport(GeneralReportModuleAdapter):
         return self.moduleName
 
     def getDescription(self):
-        return "Forensic Analysis for Mobile Apps Framework Report Generator"
+        return "Mifit Android App Report Generator"
 
     def generateReport(self, settings, progressBar):
 

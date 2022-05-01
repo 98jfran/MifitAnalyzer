@@ -69,7 +69,7 @@ window.addEventListener('DOMContentLoaded', event => {
                     <div>
                         <nav class="sb-sidenav-menu-nested nav">
                         <a class="nav-link" href="heart-rate.html">
-                        <div class="sb-nav-link-icon"><i class="fas fa-heart"></i></div>
+                        <div class="sb-nav-link-icon"><i class="fas fa-heartbeat"></i></div>
                         Heart Rate
                         </a>
                         <a class="nav-link" href="sleep.html">
@@ -91,6 +91,10 @@ window.addEventListener('DOMContentLoaded', event => {
                         <a class="nav-link" href="stress.html">
                         <div class="sb-nav-link-icon"><i class="fas fa-frown-open"></i></div>
                         Stress
+                        </a>
+                        <a class="nav-link" href="spo2.html">
+                        <div class="sb-nav-link-icon"><i class="fas fa-heartbeat"></i></div>
+                        Spo2
                         </a>
                         </nav>
                     </div>

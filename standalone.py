@@ -11,8 +11,8 @@ class Standalone:
     def __init__(self, dump_path="", report_path="report.json", start_date=None, end_date=None, gps=None):
         self.dump_path = dump_path
         self.report_path = report_path
-        self.start_date = Utils.date_to_timestamp(start_date, "%Y-%m-%d", 0)
-        self.end_date = Utils.date_to_timestamp(end_date, "%Y-%m-%d", Utils.get_current_timestamp())
+        self.start_date = Utils.date_to_timestamp(start_date, "%Y-%m-%d", 0, False)
+        self.end_date = Utils.date_to_timestamp(end_date, "%Y-%m-%d", Utils.get_current_timestamp(), False)
         self.gps = gps
         logging.info("Start date: {}".format( self.start_date))
         logging.info("End date: {}".format( self.end_date))
@@ -29,6 +29,7 @@ class Standalone:
 
         origin_dbs = Utils.list_files(self.dump_path, "origin_db", ["journal","wal", "-shm"])
         stress_dbs = Utils.list_files(self.dump_path, "stress_", ["journal","wal", "shm"])
+        spo_dbs = Utils.list_files(self.dump_path, "spo2_", ["journal","wal", "shm", "db-wal"])
         sdk_xmls = Utils.list_files(self.dump_path, "hm_id_sdk_android")
 
         for db in origin_dbs:
@@ -43,6 +44,15 @@ class Standalone:
             try:
                 logging.info("Analysing {} database... ".format(db))
                 self.report_struct["report"]["stress"] = self.__analyze_stress(db)
+            except Exception as e:
+                logging.warning(e)
+                pass
+        
+        for db in spo_dbs:
+            try:
+                logging.info("Analysing {} database... ".format(db))
+                self.report_struct["report"]["spo"] = self.__analyze_spo(db)
+                
             except Exception as e:
                 logging.warning(e)
                 pass
@@ -172,7 +182,7 @@ class Standalone:
             for entry in results:
                 activity_record = {}
                 try:
-                    activity_record["type"] = str(entry[0])
+                    activity_record["type"] = MifitUtils.mode_to_workout(str(entry[0]))
                     activity_record["start"] = int(entry[2])
                     activity_record["end"] =  int(entry[10])
                     activity_record["distance"] = str(entry[3])
@@ -188,7 +198,7 @@ class Standalone:
                             self.kml_struct.add_placemark('Location1','Description1',c.split(" ")[0],c.split(" ")[1],0)
 
                 except Exception as e:
-                    logging.warning(e)
+                    logging.warning(entry)
         
 
             return {"hr": hr_records, "alarm": alarm_records, "sleep": sleep_records, "steps": step_records, "workouts": activity_records}
@@ -225,6 +235,36 @@ class Standalone:
             # logging.warning(e)
         
         return {"allDayStress": stress_records}
+
+        
+    def __analyze_spo(self, database_path):
+        
+        logging.info("Parsing SPO Data")
+        
+        spo_records = []
+
+        try:
+            database = Database(database_path)
+            results = database.execute_query(
+                "select utcTimestamp, spo2, deviceId from click_measured_spo2")
+
+            for entry in results:
+                try:
+                    if(not Utils.is_timestamp_between_timestamps(int(entry[0])/1000, self.start_date, self.end_date)):
+                        continue
+                    spo_record = {}
+                    spo_record["time"] = int(entry[0]/1000)
+                    spo_record["value"] = int(entry[1])
+                    spo_record["device"] = str(entry[2])
+                    spo_records.append(spo_record)
+                except:
+                    pass
+
+        except Exception as e:
+            pass
+            # logging.warning(e)
+        
+        return {"spo": spo_records}
         
 
     def __analyze_sdk(self, xml_path):

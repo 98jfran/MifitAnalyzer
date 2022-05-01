@@ -26,6 +26,7 @@ class MifitIngestModule(DataSourceIngestModule):
             'workout': BlackBoardUtils.create_artifact_type("MIFIT", "MIFIT_WORKOUT", "Workouts"),
             'userInfo': BlackBoardUtils.create_artifact_type("MIFIT", "MIFIT_USER", "User Info"),
             'stress': BlackBoardUtils.create_artifact_type("MIFIT", "MIFIT_STRESS", "Stress"),
+            'spo': BlackBoardUtils.create_artifact_type("MIFIT", "MIFIT_SPO", "Spo2"),
         }
 
         self.attributes = {
@@ -52,6 +53,8 @@ class MifitIngestModule(DataSourceIngestModule):
             'idToken': BlackBoardUtils.create_attribute_type('MIFIT_IDTOKEN', BlackboardAttribute.TSK_BLACKBOARD_ATTRIBUTE_VALUE_TYPE.STRING, "Token Id"),
             'thirdId': BlackBoardUtils.create_attribute_type('MIFIT_THIRDID', BlackboardAttribute.TSK_BLACKBOARD_ATTRIBUTE_VALUE_TYPE.STRING, "Third Party Id"),
             'stress': BlackBoardUtils.create_attribute_type('MIFIT_STRESS', BlackboardAttribute.TSK_BLACKBOARD_ATTRIBUTE_VALUE_TYPE.STRING, "Stress Value"),
+
+            'spo': BlackBoardUtils.create_attribute_type('MIFIT_SPO', BlackboardAttribute.TSK_BLACKBOARD_ATTRIBUTE_VALUE_TYPE.STRING, "Spo Value"),
         }
 
         # Context of the ingest
@@ -104,13 +107,27 @@ class MifitIngestModule(DataSourceIngestModule):
             try:
                 artifact = file.newArtifact(self.artifacts.get('heartRate').getTypeID())
                 attributes = [
-                    BlackboardAttribute(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_DATETIME, file.getLocalPath(), entry.get("time")/1000),
+                    BlackboardAttribute(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_DATETIME, file.getLocalPath(), entry.get("time")),
                     BlackboardAttribute(self.attributes.get('heartRate'), file.getLocalPath(), entry.get("value")),
                     BlackboardAttribute(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_DEVICE_ID, file.getLocalPath(), entry.get("device"))
                 ]
                 BlackBoardUtils.index_artifact(artifact, self.artifacts.get('heartRate'), attributes)
             except Exception as e:
                 logging.warning(str(e))
+
+        
+        for entry in self.get_info("spo").get("spo"):
+            try:
+                artifact = file.newArtifact(self.artifacts.get('spo').getTypeID())
+                attributes = [
+                    BlackboardAttribute(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_DATETIME, file.getLocalPath(), entry.get("time")),
+                    BlackboardAttribute(self.attributes.get('spo'), file.getLocalPath(), str(entry.get("value"))),
+                    BlackboardAttribute(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_DEVICE_ID, file.getLocalPath(), entry.get("device"))
+                ]
+                BlackBoardUtils.index_artifact(artifact, self.artifacts.get('spo'), attributes)
+            except Exception as e:
+                logging.warning(str(e))
+
         
         for entry in self.get_info("origin").get("sleep"):
             try:
@@ -182,7 +199,6 @@ class MifitIngestModule(DataSourceIngestModule):
                 attributes = [
                     BlackboardAttribute(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_DATETIME, file.getLocalPath(), entry.get("time")/1000),
                     BlackboardAttribute(self.attributes.get('stress'), file.getLocalPath(), entry.get("value")),
-                    BlackboardAttribute(self.attributes.get('steps'), file.getLocalPath(), entry.get("steps"))
                 ]
                 BlackBoardUtils.index_artifact(artifact, self.artifacts.get('stress'), attributes)
             except:

@@ -26,14 +26,14 @@ var stressChart = document.getElementById("stress-chart");
 new Chart(stressChart, {
   type: 'line',
   data: {
-    labels: stressReport.map((e) => timeConverter(e.time / 1000)),
+    labels: stressReport.map((e) => timeConverter(e.time)),
     datasets: [{
       label: "Stress Value",
       lineTension: 0.3,
-      backgroundColor: "rgba(2,117,216,0.2)",
-      borderColor: "rgba(2,117,216,1)",
+      backgroundColor: "rgba(1,200,10,0.2)",
+      borderColor: "rgba(1,200,10,1)",
       pointRadius: 5,
-      pointBackgroundColor: "rgba(2,117,216,1)",
+      pointBackgroundColor: "rgba(1,200,10,1)",
       pointBorderColor: "rgba(255,255,255,0.8)",
       pointHoverRadius: 5,
       pointHoverBackgroundColor: "rgba(2,117,216,1)",

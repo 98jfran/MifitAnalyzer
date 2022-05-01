@@ -119,13 +119,13 @@ class Utils:
         return str(datetime.datetime.fromtimestamp(timestamp))
 
     @staticmethod
-    def date_to_timestamp(date, date_format, default=None):
+    def date_to_timestamp(date, date_format, default=None, print_error=True):
         try:
             timestamp = int(time.mktime(datetime.datetime.strptime(date, date_format).timetuple()))
             return timestamp
         except Exception as e:
-            logging.error(e)
-            logging.warning("Invalid date {} ({}) to be convert to timestamp. Using {} by default.".format(date, date_format, default))
+            if print_error:
+                logging.warning("Invalid date {} ({}) to be convert to timestamp. Using {} by default.".format(date, date_format, default))
             return default
     
     @staticmethod
@@ -381,6 +381,43 @@ class SettingsUtils:
 class MifitUtils:
 
     @staticmethod
+    def mode_to_workout(mode):
+        workout = {
+            "53": "Stretching",
+            "92": "Badminton",
+            "85": "Basketball",
+            "80": "Bowling",
+            "97": "Box",
+            "6": "Walking",
+            "9": "Outdoor Cycling",
+            "10": "Indoor Cycling",
+            "TODO": "Outdoor Running",
+            "78": "Cricket",
+            "76": "Dance",
+            "74": "Street dancing",
+            "12": "Elliptical",
+            "59": "Gymnastics",
+            "49": "HIIT",
+            "60": "Yoga",
+            "16": "Free",
+            "23": "Rowing Machine",
+            "14": "Pool swimming",
+            "8": "Treadmill",
+            "45": "Indoor ice skating",
+            "61": "Pilates",
+            "21": "Jumping rope",
+            "104": "Kickboxing",
+            "58": "Stepper",
+            "89": "Table tennis",
+            "50": "Core training",
+            "24": "Indoor training",
+            "88": "Volleyball",
+            "77": "Zumba"
+        }.get(mode)
+        return workout if workout else str(mode + " - Unknown")
+
+
+    @staticmethod
     def mode_to_activity(mode):
         activity = {
             "1": "Slow Walking",
@@ -402,7 +439,11 @@ class MifitUtils:
     
     @staticmethod    
     def getCoordianateByString(raw):
-        return {"lat": int(raw.split(",")[0]), "lon": int(raw.split(",")[1])}
+        try:
+            c = {"lat": int(raw.split(",")[0]), "lon": int(raw.split(",")[1])}
+            return c
+        except:
+            return [0, 0]
 
     @staticmethod
     def getCoordinateByBulkArray(bulk):

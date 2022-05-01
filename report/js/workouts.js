@@ -57,7 +57,9 @@ window.addEventListener('DOMContentLoaded', event => {
             `
             });
             item.coordinates.forEach((coordinate) => {
-                latlngs.push([Number(coordinate.split(' ')[0]), Number(coordinate.split(' ')[1])]);
+                if(Number(coordinate.split(' ')[0]) && Number(coordinate.split(' ')[1])){
+                    latlngs.push([Number(coordinate.split(' ')[0]), Number(coordinate.split(' ')[1])]);
+                }
             });
             
             
@@ -65,13 +67,14 @@ window.addEventListener('DOMContentLoaded', event => {
 
         }
     });
-
-
-    var polyline = L.polyline(latlngs, {color: 'red'}).addTo(map);        
-    L.marker(latlngs[0]).addTo(map);
-    L.marker(latlngs[latlngs.length-1]).addTo(map);
-    map.fitBounds(polyline.getBounds());
-    map.setZoom(13);
+    if (latlngs && latlngs.length > 0) {
+        var polyline = L.polyline(latlngs, {color: 'red'}).addTo(map);        
+        L.marker(latlngs[0]).addTo(map);
+        L.marker(latlngs[latlngs.length-1]).addTo(map);
+        map.fitBounds(polyline.getBounds());
+        map.setZoom(13);
+    }
+    
     
     document.getElementById("workout-records").innerHTML = workoutsHTML;
     document.getElementById("coordinate-records").innerHTML = coordinatesHTML;
