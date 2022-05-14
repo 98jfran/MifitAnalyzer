@@ -76,6 +76,11 @@
   }
 }
 
+.img-device {
+  width: 300px;
+  height: 300px;
+}
+
 body {
   margin: 0;
   font-family: var(--bs-body-font-family);

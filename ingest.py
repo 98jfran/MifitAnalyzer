@@ -41,7 +41,7 @@ class MifitIngestModule(DataSourceIngestModule):
             'type': BlackBoardUtils.create_attribute_type('MIFIT_TYPE', BlackboardAttribute.TSK_BLACKBOARD_ATTRIBUTE_VALUE_TYPE.STRING, "Type"),
             'datestr': BlackBoardUtils.create_attribute_type('MIFIT_DATESTR', BlackboardAttribute.TSK_BLACKBOARD_ATTRIBUTE_VALUE_TYPE.STRING, "Date"),
             'cadence': BlackBoardUtils.create_attribute_type('MIFIT_CADENCE', BlackboardAttribute.TSK_BLACKBOARD_ATTRIBUTE_VALUE_TYPE.STRING, "Cadence"),
-            'startTime': BlackBoardUtils.create_attribute_type('MIFIT_STARTTIME', BlackboardAttribute.TSK_BLACKBOARD_ATTRIBUTE_VALUE_TYPE.DATETIME, "Start TIme"),
+            'startTime': BlackBoardUtils.create_attribute_type('MIFIT_STARTTIME', BlackboardAttribute.TSK_BLACKBOARD_ATTRIBUTE_VALUE_TYPE.DATETIME, "Start Time"),
             'endTime': BlackBoardUtils.create_attribute_type('MIFIT_ENDTIME', BlackboardAttribute.TSK_BLACKBOARD_ATTRIBUTE_VALUE_TYPE.DATETIME, "End Time"),
             'from': BlackBoardUtils.create_attribute_type('MIFIT_FROM', BlackboardAttribute.TSK_BLACKBOARD_ATTRIBUTE_VALUE_TYPE.STRING, "From"),
             'to': BlackBoardUtils.create_attribute_type('MIFIT_TO', BlackboardAttribute.TSK_BLACKBOARD_ATTRIBUTE_VALUE_TYPE.STRING, "To"),
@@ -55,6 +55,15 @@ class MifitIngestModule(DataSourceIngestModule):
             'stress': BlackBoardUtils.create_attribute_type('MIFIT_STRESS', BlackboardAttribute.TSK_BLACKBOARD_ATTRIBUTE_VALUE_TYPE.STRING, "Stress Value"),
 
             'spo': BlackBoardUtils.create_attribute_type('MIFIT_SPO', BlackboardAttribute.TSK_BLACKBOARD_ATTRIBUTE_VALUE_TYPE.STRING, "Spo Value"),
+
+            'bindStatus': BlackBoardUtils.create_attribute_type('MIFIT_BIND_STATUS', BlackboardAttribute.TSK_BLACKBOARD_ATTRIBUTE_VALUE_TYPE.STRING, "Bind Status"),
+            'bindTime': BlackBoardUtils.create_attribute_type('MIFIT_BIND_TIME', BlackboardAttribute.TSK_BLACKBOARD_ATTRIBUTE_VALUE_TYPE.DATETIME, "Bind Time"),
+            'syncDataTime': BlackBoardUtils.create_attribute_type('MIFIT_SYNC_DATATIME', BlackboardAttribute.TSK_BLACKBOARD_ATTRIBUTE_VALUE_TYPE.DATETIME, "Sync Data Time"),
+            'syncDataTimeHR': BlackBoardUtils.create_attribute_type('MIFIT_SYNC_DATATIME_HR', BlackboardAttribute.TSK_BLACKBOARD_ATTRIBUTE_VALUE_TYPE.DATETIME, "Sync Data Time HR"),
+            'authkey': BlackBoardUtils.create_attribute_type('MIFIT_AUTH_KEY', BlackboardAttribute.TSK_BLACKBOARD_ATTRIBUTE_VALUE_TYPE.STRING, "Auth Key"),
+            'sn': BlackBoardUtils.create_attribute_type('MIFIT_SN', BlackboardAttribute.TSK_BLACKBOARD_ATTRIBUTE_VALUE_TYPE.STRING, "S/N"),
+            'firmwareVersion': BlackBoardUtils.create_attribute_type('MIFIT_FIRMWARE_VERSION', BlackboardAttribute.TSK_BLACKBOARD_ATTRIBUTE_VALUE_TYPE.STRING, "Firmware Version"),
+            'type': BlackBoardUtils.create_attribute_type('MIFIT_TYPE', BlackboardAttribute.TSK_BLACKBOARD_ATTRIBUTE_VALUE_TYPE.STRING, "Type"),
         }
 
         # Context of the ingest
@@ -181,6 +190,32 @@ class MifitIngestModule(DataSourceIngestModule):
                     BlackboardAttribute(self.attributes.get('distance'), file.getLocalPath(), entry.get("distance")),
                     BlackboardAttribute(self.attributes.get('calories'), file.getLocalPath(), entry.get("calories")),
                     BlackboardAttribute(self.attributes.get('steps'), file.getLocalPath(), entry.get("steps"))
+                    ]
+                
+                BlackBoardUtils.index_artifact(artifact, self.artifacts.get('steps'), attributes)
+                if self.is_gps:
+                    for coordinate in entry.get("coordinates"):
+                        try:
+                            BlackBoardUtils.add_tracking_point(file, entry.get("start"), coordinate.split(" ")[0], coordinate.split(" ")[1], source=file.getLocalPath())
+                        except:
+                            pass
+            except:
+                pass
+        
+        for entry in self.get_info("origin").get("devices"):
+            try:
+                artifact = file.newArtifact(BlackboardArtifact.ARTIFACT_TYPE.TSK_BLUETOOTH_ADAPTER)
+                attributes = [
+                    BlackboardAttribute(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_DEVICE_ID, file.getLocalPath(), entry.get("id")),
+                    BlackboardAttribute(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_MAC_ADDRESS, file.getLocalPath(), entry.get("address")),
+                    BlackboardAttribute(self.attributes.get('bindStatus'), file.getLocalPath(), entry.get("bindStatus")),
+                    BlackboardAttribute(self.attributes.get('bindTime'), file.getLocalPath(), entry.get("bindTime")),
+                    BlackboardAttribute(self.attributes.get('syncDataTime'), file.getLocalPath(), entry.get("syncDataTime")),
+                    BlackboardAttribute(self.attributes.get('syncDataTimeHR'), file.getLocalPath(), entry.get("syncDataTimeHR")),
+                    BlackboardAttribute(self.attributes.get('authkey'), file.getLocalPath(), entry.get("authkey")),
+                    BlackboardAttribute(self.attributes.get('sn'), file.getLocalPath(), entry.get("sn")),
+                    BlackboardAttribute(self.attributes.get('firmwareVersion'), file.getLocalPath(), entry.get("firmwareVersion")),
+                    BlackboardAttribute(self.attributes.get('type'), file.getLocalPath(), entry.get("type"))
                     ]
                 
                 BlackBoardUtils.index_artifact(artifact, self.artifacts.get('steps'), attributes)

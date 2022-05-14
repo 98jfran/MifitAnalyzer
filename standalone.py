@@ -199,9 +199,31 @@ class Standalone:
 
                 except Exception as e:
                     logging.warning(entry)
+
+            
+            results = database.execute_query(
+                    "select DEVICE_ID, DEVICE_ADDRESS, DEVICE_BIND_STATUS, DEVICE_BIND_TIME, DEVICE_SYNC_DATA_TIME, DEVICE_SYNC_DATA_TIME_HR, AUTHKEY, SN, FIRMWARE_VERSION, DEVICE_SOURCE from DEVICE")
+            
+            devices = []
+            for entry in results:
+                device_record = {}
+                try:
+                    device_record["id"] = str(entry[0])
+                    device_record["address"] = str(entry[1])
+                    device_record["bindStatus"] = str(entry[2])
+                    device_record["bindTime"] = int(entry[3])
+                    device_record["syncDataTime"] = int(entry[4])
+                    device_record["syncDataTimeHR"] = int(entry[5])
+                    device_record["authkey"] = str(entry[6])
+                    device_record["sn"] = str(entry[7])
+                    device_record["firmwareVersion"] = str(entry[8])
+                    device_record["type"] = str(entry[9])
+                    devices.append(device_record)
+                except:
+                    pass
         
 
-            return {"hr": hr_records, "alarm": alarm_records, "sleep": sleep_records, "steps": step_records, "workouts": activity_records}
+            return {"hr": hr_records, "alarm": alarm_records, "sleep": sleep_records, "steps": step_records, "workouts": activity_records, "devices": devices}
         except:
             pass
 

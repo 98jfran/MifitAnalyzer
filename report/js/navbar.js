@@ -65,6 +65,10 @@ window.addEventListener('DOMContentLoaded', event => {
                         <div class="sb-nav-link-icon"><i class="fas fa-users"></i></div>
                         Profiles
                     </a>
+                    <a class="nav-link" href="device.html">
+                        <div class="sb-nav-link-icon"><i class="fas fa-mobile"></i></div>
+                        Devices
+                    </a>
                     <div class="sb-sidenav-menu-heading">Artifacts</div>
                     <div>
                         <nav class="sb-sidenav-menu-nested nav">
