@@ -1,10 +1,11 @@
 var reportRAW = {
   "case": {
-    "number": null,
-    "examinerName": null,
-    "examinerPhone": null,
-    "examinerEmail": null,
-    "examinerNotes": null
+    "number": "1",
+    "examinerName": "Jose",
+    "examinerPhone": "123456789",
+    "examinerEmail": "examiner@example.com",
+    "examinerNotes": "notes",
+    "caseDate": 1655248266
   },
   "report": {
     "origin": {
@@ -10383,7 +10384,7 @@ var reportRAW = {
           "coordinates": []
         },
         {
-          "type": "None - Unknown",
+          "type": "Indoor ice skating",
           "start": 1651090838,
           "end": 1651090856,
           "distance": "0",
@@ -10392,7 +10393,7 @@ var reportRAW = {
           "coordinates": []
         },
         {
-          "type": "None - Unknown",
+          "type": "Zumba",
           "start": 1651090797,
           "end": 1651090814,
           "distance": "0",
@@ -10401,7 +10402,7 @@ var reportRAW = {
           "coordinates": []
         },
         {
-          "type": "None - Unknown",
+          "type": "Street dancing",
           "start": 1651090723,
           "end": 1651090745,
           "distance": "0",
@@ -10410,7 +10411,7 @@ var reportRAW = {
           "coordinates": []
         },
         {
-          "type": "None - Unknown",
+          "type": "Kickboxing",
           "start": 1651090651,
           "end": 1651090672,
           "distance": "0",
@@ -10419,7 +10420,7 @@ var reportRAW = {
           "coordinates": []
         },
         {
-          "type": "None - Unknown",
+          "type": "Box",
           "start": 1651090599,
           "end": 1651090620,
           "distance": "0",
@@ -10428,7 +10429,7 @@ var reportRAW = {
           "coordinates": []
         },
         {
-          "type": "None - Unknown",
+          "type": "Bowling",
           "start": 1651090541,
           "end": 1651090583,
           "distance": "0",
@@ -10437,7 +10438,7 @@ var reportRAW = {
           "coordinates": []
         },
         {
-          "type": "None - Unknown",
+          "type": "Cricket",
           "start": 1651090494,
           "end": 1651090522,
           "distance": "0",
@@ -10446,7 +10447,7 @@ var reportRAW = {
           "coordinates": []
         },
         {
-          "type": "None - Unknown",
+          "type": "Badminton",
           "start": 1651090462,
           "end": 1651090481,
           "distance": "0",
@@ -10455,7 +10456,7 @@ var reportRAW = {
           "coordinates": []
         },
         {
-          "type": "None - Unknown",
+          "type": "Table tennis",
           "start": 1651090433,
           "end": 1651090449,
           "distance": "0",
@@ -10464,7 +10465,7 @@ var reportRAW = {
           "coordinates": []
         },
         {
-          "type": "None - Unknown",
+          "type": "Volleyball",
           "start": 1651090395,
           "end": 1651090411,
           "distance": "0",
@@ -10473,7 +10474,7 @@ var reportRAW = {
           "coordinates": []
         },
         {
-          "type": "None - Unknown",
+          "type": "Basketball",
           "start": 1651090353,
           "end": 1651090374,
           "distance": "0",
@@ -10482,7 +10483,7 @@ var reportRAW = {
           "coordinates": []
         },
         {
-          "type": "None - Unknown",
+          "type": "Stepper",
           "start": 1651089359,
           "end": 1651089381,
           "distance": "0",
@@ -10491,7 +10492,7 @@ var reportRAW = {
           "coordinates": []
         },
         {
-          "type": "None - Unknown",
+          "type": "Stretching",
           "start": 1651089330,
           "end": 1651089342,
           "distance": "0",
@@ -10500,7 +10501,7 @@ var reportRAW = {
           "coordinates": []
         },
         {
-          "type": "None - Unknown",
+          "type": "Core training",
           "start": 1651089300,
           "end": 1651089314,
           "distance": "0",
@@ -10509,7 +10510,7 @@ var reportRAW = {
           "coordinates": []
         },
         {
-          "type": "None - Unknown",
+          "type": "HIIT",
           "start": 1651089272,
           "end": 1651089283,
           "distance": "0",
@@ -10518,7 +10519,7 @@ var reportRAW = {
           "coordinates": []
         },
         {
-          "type": "None - Unknown",
+          "type": "Gymnastics",
           "start": 1651089242,
           "end": 1651089255,
           "distance": "0",
@@ -10527,7 +10528,7 @@ var reportRAW = {
           "coordinates": []
         },
         {
-          "type": "None - Unknown",
+          "type": "Yoga",
           "start": 1651089205,
           "end": 1651089220,
           "distance": "0",
@@ -10536,7 +10537,7 @@ var reportRAW = {
           "coordinates": []
         },
         {
-          "type": "None - Unknown",
+          "type": "Jumping rope",
           "start": 1651089148,
           "end": 1651089174,
           "distance": "0",
@@ -10545,7 +10546,7 @@ var reportRAW = {
           "coordinates": []
         },
         {
-          "type": "None - Unknown",
+          "type": "Elliptical",
           "start": 1651089092,
           "end": 1651089111,
           "distance": "0",
@@ -10559,14 +10560,26 @@ var reportRAW = {
           "id": "E9DA65FFFEACBCE6",
           "address": "E9:DA:65:AC:BC:E6",
           "bindStatus": "1",
-          "bindTime": "1628288909000",
-          "syncDataTime": "1651178520000",
-          "syncDataTimeHR": "1628288909000",
+          "bindTime": 1628288909000,
+          "syncDataTime": 1651178520000,
+          "syncDataTimeHR": 1628288909000,
           "authkey": "857e25add4223b36eff53e8d4098b12f",
           "sn": "32093/40372377",
-          "firmwareVersion": "V0.1.0.49"
+          "firmwareVersion": "V0.1.0.49",
+          "type": "212",
+          "hardwareVersion": "V0.82.17.3",
+          "productVersion": "257",
+          "userId": "7052202544"
         }
-      ]
+      ],
+      "userDetails": {
+        "id": "7052202544",
+        "name": "Jos\u00e9 Francisco",
+        "avatar": "https://s3.eu-central-1.amazonaws.com/huami-public-de/com.xiaomi.hm.health/7052202544/bracelet_icon.jpg?thumb=1&w=320&h=320",
+        "height": "177",
+        "weight": "82.5",
+        "lastLoginTime": 1638129407
+      }
     },
     "stress": {
       "allDayStress": [

@@ -20,12 +20,14 @@ class Standalone:
         self.kml_struct = Kml()
 
     def analyse(self):
+        
         self.report_struct = {"case":{}, "report":{}}
         self.report_struct["case"]["number"] = os.environ.get("CASE_NUMBER")
         self.report_struct["case"]["examinerName"] = os.environ.get("EXAMINER_NAME")
         self.report_struct["case"]["examinerPhone"] = os.environ.get("EXAMINER_PHONE")
         self.report_struct["case"]["examinerEmail"] = os.environ.get("EXAMINER_EMAIL")
         self.report_struct["case"]["examinerNotes"] = os.environ.get("EXAMINER_NOTES")
+        self.report_struct["case"]["caseDate"] = Utils.get_current_timestamp()
 
         origin_dbs = Utils.list_files(self.dump_path, "origin_db", ["journal","wal", "-shm"])
         stress_dbs = Utils.list_files(self.dump_path, "stress_", ["journal","wal", "shm"])
@@ -175,7 +177,7 @@ class Standalone:
 
             # Workouts
             results = database.execute_query(
-                    "select td.TYPE, tr.DATE, tr.TRACKID, tr.DISTANCE, tr.COSTTIME, tr.CAL, tr.PACE, tr.SFREQ, tr.AVGHR, tr.TOTAL_STEP, tr.ENDTIME, td.BULKLL from TRACKRECORD tr LEFT JOIN TRACKDATA td ON (tr.TRACKID =  td.TRACKID)")
+                    "select tr.TYPE, tr.DATE, tr.TRACKID, tr.DISTANCE, tr.COSTTIME, tr.CAL, tr.PACE, tr.SFREQ, tr.AVGHR, tr.TOTAL_STEP, tr.ENDTIME, td.BULKLL from TRACKRECORD tr LEFT JOIN TRACKDATA td ON (tr.TRACKID =  td.TRACKID)")
             
             activity_records = []
             
@@ -202,7 +204,7 @@ class Standalone:
 
             
             results = database.execute_query(
-                    "select DEVICE_ID, DEVICE_ADDRESS, DEVICE_BIND_STATUS, DEVICE_BIND_TIME, DEVICE_SYNC_DATA_TIME, DEVICE_SYNC_DATA_TIME_HR, AUTHKEY, SN, FIRMWARE_VERSION, DEVICE_SOURCE from DEVICE")
+                    "select DEVICE_ID, DEVICE_ADDRESS, DEVICE_BIND_STATUS, DEVICE_BIND_TIME, DEVICE_SYNC_DATA_TIME, DEVICE_SYNC_DATA_TIME_HR, AUTHKEY, SN, FIRMWARE_VERSION, DEVICE_SOURCE, HARDWARE_VERSION, PRODUCT_VERSION, USER_ID from DEVICE")
             
             devices = []
             for entry in results:
@@ -218,12 +220,33 @@ class Standalone:
                     device_record["sn"] = str(entry[7])
                     device_record["firmwareVersion"] = str(entry[8])
                     device_record["type"] = str(entry[9])
+                    device_record["hardwareVersion"] = str(entry[10])
+                    device_record["productVersion"] = str(entry[11])
+                    device_record["userId"] = str(entry[12])
                     devices.append(device_record)
+                except:
+                    pass
+
+
+            results = database.execute_query(
+                    "select USER_ID, NAME, AVATAR_URL, HEIGHT, WEIGHT, LAST_LOGIN_TIME from USER_INFOS")
+            
+            users_details = []
+            for entry in results:
+                user_details = {}
+                try:
+                    user_details["id"] = str(entry[0])
+                    user_details["name"] = str(entry[1])
+                    user_details["avatar"] = str(entry[2])
+                    user_details["height"] = str(entry[3])
+                    user_details["weight"] = str(entry[4])
+                    user_details["lastLoginTime"] = int(entry[5])
+                    users_details.append(user_details)
                 except:
                     pass
         
 
-            return {"hr": hr_records, "alarm": alarm_records, "sleep": sleep_records, "steps": step_records, "workouts": activity_records, "devices": devices}
+            return {"hr": hr_records, "alarm": alarm_records, "sleep": sleep_records, "steps": step_records, "workouts": activity_records, "devices": devices, "userDetails": user_details}
         except:
             pass
 
@@ -310,5 +333,6 @@ class Standalone:
                     users.append(user_info)
             except Exception as e:
                 logging.warning(e)
+                
             
         return {"userInfo": users}

@@ -25,8 +25,20 @@ function isBetweenGlobalDates(date){
     return (date > globalFrom() && date < globalTo())
 }
 
+function populateCaseDetails(caseDetails){
+    document.getElementById('caseDate').innerHTML = timeConverter(caseDetails?.caseDate);
+    document.getElementById('caseNumber').value =  caseDetails?.number;
+    document.getElementById('caseName').value =  caseDetails?.examinerName;
+    document.getElementById('casePhone').value =  caseDetails?.examinerPhone;
+    document.getElementById('caseEmail').value =  caseDetails?.examinerEmail;
+    document.getElementById('caseNotes').value =  caseDetails?.examinerNotes;
+    
+}
 
 window.addEventListener('DOMContentLoaded', event => {
+
+    var caseDetails = reportRAW['case'];
+
     document.getElementById("mf-navbar").innerHTML = 
     `
     <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
@@ -49,7 +61,7 @@ window.addEventListener('DOMContentLoaded', event => {
         <div class="col-4">
             <input onblur="saveOnLocalStorage('global-to', this.value);" id="global-to" type="datetime-local" class="form-control" name="to">
         </div>
-        <div class="col-2">
+        <div class="col-2 p-0">
             <button type="button" onclick="clearLocalStorageDates()" class="btn btn-primary">Clear Dates</button>
         </div>
       </div>
@@ -105,18 +117,44 @@ window.addEventListener('DOMContentLoaded', event => {
                 </div>
             </div>
             <div class="sb-sidenav-footer">
-                <div class="small">Report created at:</div>
-                01/01/2001
+                <div class="small">Report created at: <span id="caseDate"> </span> </div>
+                    <a class="btn btn-link" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCase" aria-expanded="false" aria-controls="collapseCase">
+                        See case details
+                    </a>
+                    <div class="collapse" id="collapseCase">
+                    <div class="input-group mb-3">
+                        <div class="input-group input-group-sm mb-3">
+                            <span class="input-group-text" id="inputGroup-sizing-sm">Case</span>
+                            <input id="caseNumber" type="text" class="form-control" disabled>
+                        </div>
+                        <div class="input-group input-group-sm mb-3">
+                            <span class="input-group-text" id="inputGroup-sizing-sm">Name</span>
+                            <input id="caseName" type="text" class="form-control" disabled>
+                        </div>
+                        <div class="input-group input-group-sm mb-3">
+                            <span class="input-group-text" id="inputGroup-sizing-sm">Phone</span>
+                            <input id="casePhone" type="text" class="form-control" disabled>
+                        </div>
+                        <div class="input-group input-group-sm mb-3">
+                            <span class="input-group-text" id="inputGroup-sizing-sm">Email</span>
+                            <input id="caseEmail" type="text" class="form-control" disabled>
+                        </div>
+                        <div class="input-group input-group-sm mb-3">
+                            <span class="input-group-text" id="inputGroup-sizing-sm">Notes</span>
+                            <textarea id="caseNotes" type="text" class="form-control" disabled></textarea>
+                        </div>
+                    </div>
             </div>
         </nav>
     </div>
     `;
 
-
     const sidebarToggle = document.body.querySelector('#sidebarToggle');  
     
     document.getElementById('global-from').value = new Date(localStorage.getItem('global-from') * 1000).toISOString().slice(0,16);
     document.getElementById('global-to').value = new Date(localStorage.getItem('global-to') * 1000).toISOString().slice(0,16);
+    
+    populateCaseDetails(caseDetails);
    
     if (sidebarToggle) {
         if (localStorage.getItem('sb|sidebar-toggle') === 'true') {

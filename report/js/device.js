@@ -83,6 +83,25 @@ window.addEventListener('DOMContentLoaded', event => {
             <td>AUTHKEY</td>
             <td>${item.authkey}</td>
         </tr>
+
+        <tr>
+            <td>HARDWARE VERSION</td>
+            <td>${item.hardwareVersion}</td>
+        </tr>
+
+        <tr>
+            <td>PRODUCT VERSION</td>
+            <td>${item.productVersion}</td>
+        </tr>
+
+        <tr>
+            <td>USER ID</td>
+            <td>
+                <a href="index.html">
+                ${item.userId}
+                </a>
+            </td>
+        </tr>
         `
         document.getElementById("device-list").innerHTML = recordsHTML;
         document.getElementById("device-datatable-records").innerHTML = tableHTML;

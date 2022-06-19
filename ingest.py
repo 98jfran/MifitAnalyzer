@@ -64,6 +64,9 @@ class MifitIngestModule(DataSourceIngestModule):
             'sn': BlackBoardUtils.create_attribute_type('MIFIT_SN', BlackboardAttribute.TSK_BLACKBOARD_ATTRIBUTE_VALUE_TYPE.STRING, "S/N"),
             'firmwareVersion': BlackBoardUtils.create_attribute_type('MIFIT_FIRMWARE_VERSION', BlackboardAttribute.TSK_BLACKBOARD_ATTRIBUTE_VALUE_TYPE.STRING, "Firmware Version"),
             'type': BlackBoardUtils.create_attribute_type('MIFIT_TYPE', BlackboardAttribute.TSK_BLACKBOARD_ATTRIBUTE_VALUE_TYPE.STRING, "Type"),
+            'hardwareVersion': BlackBoardUtils.create_attribute_type('MIFIT_HARDWARE_VERSION', BlackboardAttribute.TSK_BLACKBOARD_ATTRIBUTE_VALUE_TYPE.STRING, "Hardware Version"),
+            'productVersion': BlackBoardUtils.create_attribute_type('MIFIT_PRODUCT_VERSION', BlackboardAttribute.TSK_BLACKBOARD_ATTRIBUTE_VALUE_TYPE.STRING, "Product Version"),
+            'userId': BlackBoardUtils.create_attribute_type('MIFIT_USERID', BlackboardAttribute.TSK_BLACKBOARD_ATTRIBUTE_VALUE_TYPE.STRING, "User ID"),
         }
 
         # Context of the ingest
@@ -215,7 +218,10 @@ class MifitIngestModule(DataSourceIngestModule):
                     BlackboardAttribute(self.attributes.get('authkey'), file.getLocalPath(), entry.get("authkey")),
                     BlackboardAttribute(self.attributes.get('sn'), file.getLocalPath(), entry.get("sn")),
                     BlackboardAttribute(self.attributes.get('firmwareVersion'), file.getLocalPath(), entry.get("firmwareVersion")),
-                    BlackboardAttribute(self.attributes.get('type'), file.getLocalPath(), entry.get("type"))
+                    BlackboardAttribute(self.attributes.get('type'), file.getLocalPath(), entry.get("type")),
+                    BlackboardAttribute(self.attributes.get('hardwareVersion'), file.getLocalPath(), entry.get("hardwareVersion")),
+                    BlackboardAttribute(self.attributes.get('productVersion'), file.getLocalPath(), entry.get("productVersion")),
+                    BlackboardAttribute(self.attributes.get('userId'), file.getLocalPath(), entry.get("userId"))
                     ]
                 
                 BlackBoardUtils.index_artifact(artifact, self.artifacts.get('steps'), attributes)

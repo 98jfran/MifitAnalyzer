@@ -42,7 +42,7 @@ class Utils:
     
     @staticmethod
     def setup_case():
-        env_path = os.path.join(Utils.get_base_path_folder(), '.env')
+        env_path = os.path.join('.env')
         if not os.path.exists(env_path):
             return None
 

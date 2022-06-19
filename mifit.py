@@ -54,7 +54,7 @@ class MifitIngestModuleFactory(IngestModuleFactoryAdapter):
         return MifitIngestSettingsPanel(self.settings)
 
 
-class MifitIngestModuleReport(GeneralReportModuleAdapter):
+class MifitReportModule(GeneralReportModuleAdapter):
     moduleName = "Mifit Android App Report"
 
     def __init__(self):
@@ -82,7 +82,7 @@ class MifitIngestModuleReport(GeneralReportModuleAdapter):
         os.environ["CASE_NAME"] = Case.getCurrentCase().getName()
         os.environ["CASE_NUMBER"] = Case.getCurrentCase().getNumber()
         os.environ["EXAMINER"] = Case.getCurrentCase().getExaminer()
-
+        os.environ["CASE_DATE"] = Utils.get_current_timestamp()
         autopsy_version = Utils.get_autopsy_version()
 
         baseReportDir = settings
