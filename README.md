@@ -1,4 +1,4 @@
-# MiFit Analyzer for Autopsy
+# MiFit Analyzer for Autopsy and standalone app
 
 ## Getting Started
 
@@ -6,7 +6,7 @@ Index forensic artifacts related to MiFit Android App.
 
 ## Prerequisites
 
-* [Python](https://www.python.org/downloads/) (2.7+)
+* [Python](https://www.python.org/downloads/) (3.0+)
 * [Autopsy](https://www.sleuthkit.org/autopsy/)
 
 ### Running from Autopsy
@@ -20,12 +20,12 @@ Index forensic artifacts related to MiFit Android App.
 
 ## Authors
 
-* **José Carlos Francisco** - [GitHub](https://github.com/98jfran)
+* **José Carlos Francisco**
 
 ## Mentors
 
-* **Patricio Domingues** - [E-mail](patricio.domingues@ipleiria.pt)
-* **Miguel Frade** - [E-mail](miguel.frade@ipleiria.pt)
+* **Patricio Domingues**
+* **Miguel Frade**
 
 ## Environments Tested
 
