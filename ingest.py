@@ -27,6 +27,9 @@ class MifitIngestModule(DataSourceIngestModule):
             'userInfo': BlackBoardUtils.create_artifact_type("MIFIT", "MIFIT_USER", "User Info"),
             'stress': BlackBoardUtils.create_artifact_type("MIFIT", "MIFIT_STRESS", "Stress"),
             'spo': BlackBoardUtils.create_artifact_type("MIFIT", "MIFIT_SPO", "Spo2"),
+            'fhHistory': BlackBoardUtils.create_artifact_type("MIFIT", "MIFIT_FH_HISTORY", "Female Health - History"),
+            'fhRecords': BlackBoardUtils.create_artifact_type("MIFIT", "MIFIT_FH_RECORDS", "Female Health - Records"),
+            'fhSymptoms': BlackBoardUtils.create_artifact_type("MIFIT", "MIFIT_FH_SYMPTOMS", "Female Health - Symptoms"),
         }
 
         self.attributes = {
@@ -67,6 +70,8 @@ class MifitIngestModule(DataSourceIngestModule):
             'hardwareVersion': BlackBoardUtils.create_attribute_type('MIFIT_HARDWARE_VERSION', BlackboardAttribute.TSK_BLACKBOARD_ATTRIBUTE_VALUE_TYPE.STRING, "Hardware Version"),
             'productVersion': BlackBoardUtils.create_attribute_type('MIFIT_PRODUCT_VERSION', BlackboardAttribute.TSK_BLACKBOARD_ATTRIBUTE_VALUE_TYPE.STRING, "Product Version"),
             'userId': BlackBoardUtils.create_attribute_type('MIFIT_USERID', BlackboardAttribute.TSK_BLACKBOARD_ATTRIBUTE_VALUE_TYPE.STRING, "User ID"),
+            
+            'updateTime': BlackBoardUtils.create_attribute_type('MIFIT_UPDATETIME', BlackboardAttribute.TSK_BLACKBOARD_ATTRIBUTE_VALUE_TYPE.DATETIME, "Update Time"),
         }
 
         # Context of the ingest
@@ -80,9 +85,13 @@ class MifitIngestModule(DataSourceIngestModule):
     
     def get_info(self, attr=""):
         try:
-            return self.report.get("report").get(attr)
+            if self.report.get("report").get(attr): 
+                return self.report.get("report").get(attr)
+            else:
+                return {}
         except Exception as e:
             logging.warning(str(e))
+            return {}
 
     def startUp(self, context):
         # Set the environment context
@@ -238,30 +247,66 @@ class MifitIngestModule(DataSourceIngestModule):
             try:
                 artifact = file.newArtifact(self.artifacts.get('stress').getTypeID())
                 attributes = [
-                    BlackboardAttribute(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_DATETIME, file.getLocalPath(), entry.get("time")/1000),
+                    BlackboardAttribute(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_DATETIME, file.getLocalPath(), entry.get("time")),
                     BlackboardAttribute(self.attributes.get('stress'), file.getLocalPath(), entry.get("value")),
                 ]
                 BlackBoardUtils.index_artifact(artifact, self.artifacts.get('stress'), attributes)
             except:
                     pass
 
-        for entry in self.get_info("users").get("userInfo"):
+        # for entry in self.get_info("users").get("userInfo"):
+        #     try:
+        #         artifact = file.newArtifact(self.artifacts.get('userInfo').getTypeID())
+        #         attributes = [
+        #             BlackboardAttribute(self.attributes.get('provider'), file.getLocalPath(), entry.get("provider")),
+        #             BlackboardAttribute(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_COUNTRY, file.getLocalPath(), entry.get("provider")),
+        #             BlackboardAttribute(self.attributes.get('registDate'), file.getLocalPath(), entry.get("registDate")/1000),
+        #             BlackboardAttribute(self.attributes.get('appToken'), file.getLocalPath(), entry.get("appToken")),
+        #             BlackboardAttribute(self.attributes.get('loginToken'), file.getLocalPath(), entry.get("loginToken")),
+        #             BlackboardAttribute(self.attributes.get('idToken'), file.getLocalPath(), entry.get("idToken")),
+        #             BlackboardAttribute(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_EMAIL, file.getLocalPath(), entry.get("email")),
+        #             BlackboardAttribute(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_NAME_PERSON, file.getLocalPath(), entry.get("nickname")),
+        #             BlackboardAttribute(self.attributes.get('thirdId'), file.getLocalPath(), entry.get("thirdId"))
+        #         ]
+        #         BlackBoardUtils.index_artifact(artifact, self.artifacts.get('userInfo'), attributes)
+        #     except:
+        #             pass
+        
+        for entry in self.get_info("female").get("history"):
             try:
-                artifact = file.newArtifact(self.artifacts.get('userInfo').getTypeID())
+                artifact = file.newArtifact(self.artifacts.get('fhHistory').getTypeID())
                 attributes = [
-                    BlackboardAttribute(self.attributes.get('provider'), file.getLocalPath(), entry.get("provider")),
-                    BlackboardAttribute(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_COUNTRY, file.getLocalPath(), entry.get("provider")),
-                    BlackboardAttribute(self.attributes.get('registDate'), file.getLocalPath(), entry.get("registDate")/1000),
-                    BlackboardAttribute(self.attributes.get('appToken'), file.getLocalPath(), entry.get("appToken")),
-                    BlackboardAttribute(self.attributes.get('loginToken'), file.getLocalPath(), entry.get("loginToken")),
-                    BlackboardAttribute(self.attributes.get('idToken'), file.getLocalPath(), entry.get("idToken")),
-                    BlackboardAttribute(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_EMAIL, file.getLocalPath(), entry.get("email")),
-                    BlackboardAttribute(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_NAME_PERSON, file.getLocalPath(), entry.get("nickname")),
-                    BlackboardAttribute(self.attributes.get('thirdId'), file.getLocalPath(), entry.get("thirdId"))
+                    BlackboardAttribute(self.attributes.get('startTime'), file.getLocalPath(), entry.get("start")/1000),
+                    BlackboardAttribute(self.attributes.get('endTime'), file.getLocalPath(), entry.get("end")/1000)
                 ]
-                BlackBoardUtils.index_artifact(artifact, self.artifacts.get('userInfo'), attributes)
-            except:
-                    pass
+                BlackBoardUtils.index_artifact(artifact, self.artifacts.get('fhHistory'), attributes)
+            except Exception as e:
+                print(e)
+                pass
+
+        for entry in self.get_info("female").get("records"):
+            try:
+                artifact = file.newArtifact(self.artifacts.get('fhRecords').getTypeID())
+                attributes = [
+                    BlackboardAttribute(self.attributes.get('updateTime'), file.getLocalPath(), entry.get("updateTime")/1000),
+                    BlackboardAttribute(self.attributes.get('startTime'), file.getLocalPath(), entry.get("startTime")/1000)
+                ]
+                BlackBoardUtils.index_artifact(artifact, self.artifacts.get('fhHistory'), attributes)
+            except Exception as e:
+                print(e)
+                pass
+        
+        for entry in self.get_info("female").get("symptoms"):
+            try:
+                artifact = file.newArtifact(self.artifacts.get('fhSymptoms').getTypeID())
+                attributes = [
+                    BlackboardAttribute(self.attributes.get('startTime'), file.getLocalPath(), entry.get("date")/1000),
+                    BlackboardAttribute(self.attributes.get('type'), file.getLocalPath(), entry.get("type"))
+                ]
+                BlackBoardUtils.index_artifact(artifact, self.artifacts.get('fhHistory'), attributes)
+            except Exception as e:
+                print(e)
+                pass
 
 class ProgressJob:
     def __init__(self, progressBar, jobs, maxValue=100):

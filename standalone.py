@@ -29,9 +29,10 @@ class Standalone:
         self.report_struct["case"]["examinerNotes"] = os.environ.get("EXAMINER_NOTES")
         self.report_struct["case"]["caseDate"] = Utils.get_current_timestamp()
 
-        origin_dbs = Utils.list_files(self.dump_path, "origin_db", ["journal","wal", "-shm"])
-        stress_dbs = Utils.list_files(self.dump_path, "stress_", ["journal","wal", "shm"])
-        spo_dbs = Utils.list_files(self.dump_path, "spo2_", ["journal","wal", "shm", "db-wal"])
+        origin_dbs = Utils.list_files(self.dump_path, "origin_db", ["journal", "wal", "-shm"])
+        stress_dbs = Utils.list_files(self.dump_path, "stress_", ["journal", "wal", "shm"])
+        spo_dbs = Utils.list_files(self.dump_path, "spo2_", ["journal", "wal", "shm", "db-wal"])
+        femaleHealth_dbs = Utils.list_files(self.dump_path, "FemaleHealth_", ["journal", "wal", "shm", "db-wal"])
         sdk_xmls = Utils.list_files(self.dump_path, "hm_id_sdk_android")
 
         for db in origin_dbs:
@@ -55,6 +56,13 @@ class Standalone:
                 logging.info("Analysing {} database... ".format(db))
                 self.report_struct["report"]["spo"] = self.__analyze_spo(db)
                 
+            except Exception as e:
+                logging.warning(e)
+                pass
+        
+        for db in femaleHealth_dbs:
+            try:
+                self.report_struct["report"]["female"] = self.__analyze_female(db)
             except Exception as e:
                 logging.warning(e)
                 pass
@@ -312,6 +320,60 @@ class Standalone:
         return {"spo": spo_records}
         
 
+    def __analyze_female(self, database_path):
+        
+        logging.info("Parsing Female Health Data")
+        
+        menstruation_history_records = []
+        menstruation_records = []
+        symptoms_records = []
+
+        try:
+            database = Database(database_path)
+            results = database.execute_query(
+                "select menstrualPeriod, menstrualEndTime, userId from MenstruationHistory;")
+
+            for entry in results:
+                try:
+                    menstruation_history_record = {}
+                    menstruation_history_record["start"] = int(entry[0])
+                    menstruation_history_record["end"] = int(entry[1])
+                    menstruation_history_record["userId"] = int(entry[2])
+                    menstruation_history_records.append(menstruation_history_record)
+                except Exception as e:
+                    pass
+
+            
+            results = database.execute_query(
+                "select updateTime, date from MenstruationRecord;")
+
+            for entry in results:
+                try:
+                    menstruation_record = {}
+                    menstruation_record["updateTime"] = int(entry[0])
+                    menstruation_record["date"] = int(entry[1])
+                    menstruation_records.append(menstruation_record)
+                except Exception as e:
+                    pass
+
+            
+            results = database.execute_query(
+                "select date, type from Symptom;")
+
+            for entry in results:
+                try:
+                    symptoms_record = {}
+                    symptoms_record["date"] = int(entry[0])
+                    symptoms_record["type"] = str(entry[1])
+                    symptoms_records.append(symptoms_record)
+                except Exception as e:
+                    pass
+
+        except Exception as e:
+            pass
+        
+        return { "history": menstruation_history_records, "records": menstruation_records, "symptoms": symptoms_records}
+        
     def __analyze_sdk(self, xml_path):
         values = Utils.xml_attribute_finder(xml_path)
         user_info = {}

@@ -112,6 +112,11 @@ window.addEventListener('DOMContentLoaded', event => {
                         <div class="sb-nav-link-icon"><i class="fas fa-heartbeat"></i></div>
                         Spo2
                         </a>
+                        </a>
+                        <a class="nav-link" href="female.html">
+                        <div class="sb-nav-link-icon"><i class="fas fa-female"></i></div>
+                        Female Health
+                        </a>
                         </nav>
                     </div>
                 </div>
