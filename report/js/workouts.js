@@ -37,17 +37,6 @@ window.addEventListener('DOMContentLoaded', event => {
 
         if(item.coordinates && Array.isArray(item.coordinates)){
             item.coordinates.forEach(coordinate => {
-                // popupContent = `
-                // <strong>Date:</strong> ${item.start}<br>
-                // <strong>Latitude:</strong> ${coordinate.split(' ')[0]}<br>
-                // <strong>Longitude:</strong> ${coordinate.split(' ')[1]}<br>
-                // `;
-            //     if( a < 100){
-            //         markers.push([Number(coordinate.split(' ')[0]), Number(coordinate.split(' ')[1])])
-            //         L.marker([coordinate.split(' ')[0], coordinate.split(' ')[1]]).addTo(map)
-            //           .bindPopup(popupContent)
-            //           .openPopup();
-            //     }
             coordinatesHTML+=`        
             <tr>
                 <td>${coordinate.split(' ')[0]}</td>
@@ -61,18 +50,20 @@ window.addEventListener('DOMContentLoaded', event => {
                     latlngs.push([Number(coordinate.split(' ')[0]), Number(coordinate.split(' ')[1])]);
                 }
             });
-            
-            
-
-
         }
     });
+    
     if (latlngs && latlngs.length > 0) {
         var polyline = L.polyline(latlngs, {color: 'red'}).addTo(map);        
         L.marker(latlngs[0]).addTo(map);
         L.marker(latlngs[latlngs.length-1]).addTo(map);
         map.fitBounds(polyline.getBounds());
         map.setZoom(13);
+        document.getElementById("emptyMap").style.display = "none";
+        
+    }else{
+        document.getElementById("map").style.display = "none";
+        document.getElementById("downloadMap").classList.add("disabled");
     }
     
     
