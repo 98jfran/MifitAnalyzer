@@ -8,12 +8,12 @@ function clearLocalStorageDates(){
     localStorage.removeItem("global-to");
     localStorage.removeItem("global-from");
     saveOnLocalStorage("global-to", new Date());
-    saveOnLocalStorage("global-from", new Date(0));
+    saveOnLocalStorage("global-from", new Date(1388534400000));
 }
 
 function globalFrom(){
     let value = localStorage.getItem('global-from');
-    return value ? value :  document.getElementById("global-from").value = new Date(0).toISOString().slice(0,16);
+    return value ? value :  document.getElementById("global-from").value = new Date(1388534400000).toISOString().slice(0,16);
 }
 
 function globalTo(){
@@ -43,7 +43,7 @@ window.addEventListener('DOMContentLoaded', event => {
     `
     <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
     <!-- Navbar Brand-->
-    <a class="navbar-brand ps-3" href="index.html">MiFit Analysis</a>
+    <a class="navbar-brand ps-3" href="index.html">MiFit/Zeep Life Analysis</a>
     <!-- Sidebar Toggle-->
     <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#!"><i class="fas fa-bars"></i></button>
     

@@ -3,8 +3,6 @@ window.addEventListener('DOMContentLoaded', event => {
 
     spoRecords = spoRecords.filter((e) => isBetweenGlobalDates(e.time));
 
-    console.log(spoRecords.length)
-
     let recordsHTML=''
     spoRecords.forEach(function (item) {
         recordsHTML+=`

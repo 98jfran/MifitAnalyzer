@@ -1,8 +1,8 @@
-# MiFit Analyzer for Autopsy and standalone app
+# MiFit/Zeep Life Analyzer for Autopsy and standalone app
 
 ## Getting Started
 
-Index forensic artifacts related to MiFit Android App.
+Index forensic artifacts related to MiFit/Zeep Life Android App.
 
 ## Prerequisites
 

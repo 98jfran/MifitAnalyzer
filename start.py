@@ -3,7 +3,7 @@ import json
 import os
 import sys
 import logging
-from standalone import Standalone
+from ZL_std import Standalone
 
 from utils import Utils
 

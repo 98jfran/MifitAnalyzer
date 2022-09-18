@@ -32,7 +32,7 @@ class Standalone:
         origin_dbs = Utils.list_files(self.dump_path, "origin_db", ["journal", "wal", "-shm"])
         stress_dbs = Utils.list_files(self.dump_path, "stress_", ["journal", "wal", "shm"])
         spo_dbs = Utils.list_files(self.dump_path, "spo2_", ["journal", "wal", "shm", "db-wal"])
-        femaleHealth_dbs = Utils.list_files(self.dump_path, "FemaleHealth_", ["journal", "wal", "shm", "db-wal"])
+        femaleHealth_dbs = Utils.list_files(self.dump_path, "FemaleHealth_", ["journal", "wal", "shm", "db-wal", "xml"])
         sdk_xmls = Utils.list_files(self.dump_path, "hm_id_sdk_android")
 
         for db in origin_dbs:
@@ -88,7 +88,7 @@ class Standalone:
         if self.gps:
             self.kml_struct.write("map.kml")
             
-        logging.info("Full HTML report: {}".format(os.path.abspath(os.path.join("./report/index.html"))))
+        logging.info("Full HTML report: {}".format(os.path.abspath(os.path.join("report","index.html"))))
         
     
     @staticmethod
@@ -221,9 +221,9 @@ class Standalone:
                     device_record["id"] = str(entry[0])
                     device_record["address"] = str(entry[1])
                     device_record["bindStatus"] = str(entry[2])
-                    device_record["bindTime"] = int(entry[3])
-                    device_record["syncDataTime"] = int(entry[4])
-                    device_record["syncDataTimeHR"] = int(entry[5])
+                    device_record["bindTime"] = int(entry[3]/1000)
+                    device_record["syncDataTime"] = int(entry[4]/1000)
+                    device_record["syncDataTimeHR"] = int(entry[5]/1000)
                     device_record["authkey"] = str(entry[6])
                     device_record["sn"] = str(entry[7])
                     device_record["firmwareVersion"] = str(entry[8])

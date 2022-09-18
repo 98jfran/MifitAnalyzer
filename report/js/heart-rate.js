@@ -3,8 +3,6 @@ window.addEventListener('DOMContentLoaded', event => {
 
     hrRecords = hrRecords.filter((e) => isBetweenGlobalDates(e.time));
 
-    console.log(hrRecords.length)
-
     let recordsHTML=''
     hrRecords.forEach(function (item) {
         recordsHTML+=`

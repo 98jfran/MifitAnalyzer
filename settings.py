@@ -34,7 +34,7 @@ class MifitIngestSettingsPanel(IngestModuleIngestJobSettingsPanel):
         
         # title 
         self.p_title = SettingsUtils.createPanel()
-        self.lb_title = JLabel("Mifit Android App Analyzer")
+        self.lb_title = JLabel("Mifit/Zeep Life Android App Analyzer")
         self.lb_title.setFont(self.lb_title.getFont().deriveFont(Font.BOLD, 15))
         self.p_title.add(self.lb_title)
         self.add(self.p_title)
@@ -54,7 +54,7 @@ class MifitIngestSettingsPanel(IngestModuleIngestJobSettingsPanel):
 
         #text inputs
         self.p_panel.add(JLabel("Start Date (yyyy-mm-dd)"))
-        start_field = SettingsUtils.createInputField(self.setInputSetting) #change ap function
+        start_field = SettingsUtils.createInputField(self.setInputSetting)
         start_field.setMaximumSize(Dimension( 400, 24 ))
         self.add(start_field)
         self.input_start_date = start_field
@@ -66,7 +66,7 @@ class MifitIngestSettingsPanel(IngestModuleIngestJobSettingsPanel):
         self.p_panel.add(self.lb_invalid_start)
 
         self.p_panel.add(JLabel("End Date (yyyy-mm-dd)"))
-        end_field = SettingsUtils.createInputField(self.setInputSetting) #change ap function
+        end_field = SettingsUtils.createInputField(self.setInputSetting)
         end_field.setMaximumSize(Dimension( 400, 24 ))
         self.add(end_field)
         self.input_end_date = end_field

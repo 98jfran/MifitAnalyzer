@@ -66,17 +66,17 @@ window.addEventListener('DOMContentLoaded', event => {
         
          <tr>
             <td>BIND TIME</td>
-            <td>${item.bindTime}</td>
+            <td>${timeConverter(item.bindTime)} (${item.bindTime})</td>
         </tr>
 
          <tr>
             <td>SYNC DATA TIME</td>
-            <td>${item.syncDataTime}</td>
+            <td>${timeConverter(item.syncDataTime)} (${item.syncDataTime})</td>
         </tr>
         
          <tr>
             <td>SYNC DATA TIME HR</td>
-            <td>${item.syncDataTimeHR}</td>
+            <td>${timeConverter(item.syncDataTimeHR)} (${item.syncDataTimeHR})</td>
         </tr>
         
          <tr>

@@ -5,7 +5,7 @@ import sys
 
 from package.database import Database
 from gps import Kml
-from standalone import Standalone
+from ZL_std import Standalone
 from utils import BlackBoardUtils, MifitUtils, Utils
 from org.sleuthkit.autopsy.casemodule import Case
 from org.sleuthkit.autopsy.ingest import DataSourceIngestModule, IngestModule
@@ -19,17 +19,17 @@ class MifitIngestModule(DataSourceIngestModule):
         Utils.setup_custom_logger(os.path.join(
             Case.getCurrentCase().getLogDirectoryPath(), "autopsy.log.0"))
         self.artifacts = {
-            'heartRate': BlackBoardUtils.create_artifact_type("MIFIT", "MIFIT_HR", "Heart Rate Records"),
-            'alarm': BlackBoardUtils.create_artifact_type("MIFIT", "MIFIT_ALARM", "Alarms"),
-            'steps': BlackBoardUtils.create_artifact_type("MIFIT", "MIFIT_STEPS", "Steps"),
-            'sleep': BlackBoardUtils.create_artifact_type("MIFIT", "MIFIT_SLEEP", "Sleep"),
-            'workout': BlackBoardUtils.create_artifact_type("MIFIT", "MIFIT_WORKOUT", "Workouts"),
-            'userInfo': BlackBoardUtils.create_artifact_type("MIFIT", "MIFIT_USER", "User Info"),
-            'stress': BlackBoardUtils.create_artifact_type("MIFIT", "MIFIT_STRESS", "Stress"),
-            'spo': BlackBoardUtils.create_artifact_type("MIFIT", "MIFIT_SPO", "Spo2"),
-            'fhHistory': BlackBoardUtils.create_artifact_type("MIFIT", "MIFIT_FH_HISTORY", "Female Health - History"),
-            'fhRecords': BlackBoardUtils.create_artifact_type("MIFIT", "MIFIT_FH_RECORDS", "Female Health - Records"),
-            'fhSymptoms': BlackBoardUtils.create_artifact_type("MIFIT", "MIFIT_FH_SYMPTOMS", "Female Health - Symptoms"),
+            'heartRate': BlackBoardUtils.create_artifact_type("ZL_", "MIFIT_HR", "Heart Rate Records"),
+            'alarm': BlackBoardUtils.create_artifact_type("ZL_", "MIFIT_ALARM", "Alarms"),
+            'steps': BlackBoardUtils.create_artifact_type("ZL_", "MIFIT_STEPS", "Steps"),
+            'sleep': BlackBoardUtils.create_artifact_type("ZL_", "MIFIT_SLEEP", "Sleep"),
+            'workout': BlackBoardUtils.create_artifact_type("ZL_", "MIFIT_WORKOUT", "Workouts"),
+            'userInfo': BlackBoardUtils.create_artifact_type("ZL_", "MIFIT_USER", "User Info"),
+            'stress': BlackBoardUtils.create_artifact_type("ZL_", "MIFIT_STRESS", "Stress"),
+            'spo': BlackBoardUtils.create_artifact_type("ZL_", "MIFIT_SPO", "Spo2"),
+            'fhHistory': BlackBoardUtils.create_artifact_type("ZL_", "MIFIT_FH_HISTORY", "Female Health - History"),
+            'fhRecords': BlackBoardUtils.create_artifact_type("ZL_", "MIFIT_FH_RECORDS", "Female Health - Records"),
+            'fhSymptoms': BlackBoardUtils.create_artifact_type("ZL_", "MIFIT_FH_SYMPTOMS", "Female Health - Symptoms"),
         }
 
         self.attributes = {
@@ -104,7 +104,7 @@ class MifitIngestModule(DataSourceIngestModule):
 
         self.start_date = self.settings.getSetting('startDate')
         self.end_date = self.settings.getSetting('endDate')
-        self.options = json.loads(self.settings.getSetting('options'))
+        self.options = json.loads(self.settings.getSetting('options')) if self.settings.getSetting('options') else ["Index GPS Coordinates"]
         self.is_gps = "Index GPS Coordinates" in self.options
 
         logging.info("Start Date {}".format(self.settings.getSetting('startDate')))

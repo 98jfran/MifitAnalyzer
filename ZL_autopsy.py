@@ -7,7 +7,7 @@ from org.sleuthkit.autopsy.casemodule import Case
 
 
 import sys, os
-from standalone import Standalone
+from ZL_std import Standalone
 
 from utils import Utils
 
@@ -17,7 +17,7 @@ from ingest import MifitIngestModule
 from settings import MifitIngestSettingsPanel, MifitReportSettingsPanel
 
 class MifitIngestModuleFactory(IngestModuleFactoryAdapter):
-    moduleName = "Mifit Android App Analyzer"
+    moduleName = "Mifit and Zeep Life Android App Analyzer"
 
     def __init__(self):
         self.settings = None
@@ -27,7 +27,7 @@ class MifitIngestModuleFactory(IngestModuleFactoryAdapter):
         return self.moduleName
 
     def getModuleDescription(self):
-        return "Mifit Analyzer for Autopsy"
+        return "Mifit and Zeep Life Analyzer for Autopsy"
         
     def getModuleVersionNumber(self):
         return "1.0"
@@ -55,7 +55,7 @@ class MifitIngestModuleFactory(IngestModuleFactoryAdapter):
 
 
 class MifitReportModule(GeneralReportModuleAdapter):
-    moduleName = "Mifit Android App Report"
+    moduleName = "Mifit and Zeep Life Android App Report"
 
     def __init__(self):
         self.settings = None
@@ -65,7 +65,7 @@ class MifitReportModule(GeneralReportModuleAdapter):
         return self.moduleName
 
     def getDescription(self):
-        return "Mifit Android App Report Generator"
+        return "Mifit and Zeep Life Android App Report Generator"
 
     def generateReport(self, settings, progressBar):
 
@@ -108,4 +108,4 @@ class MifitReportModule(GeneralReportModuleAdapter):
         return self.configPanel
 
     def getRelativeFilePath(self):
-        return "../../ModuleOutput/Mifit/index.html"
+        return "\\..\\..\\ModuleOutput\\Mifit\\index.html"
